@@ -16,7 +16,15 @@ Canvas::~Canvas () {
     delete wax;
 }
 
-void Canvas::draw () const {
+void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
+    x2 = x2 ? x2 : width;
+    y2 = y2 ? y2 : height;
+    for (int y = y1; y < y2; y++) {
+        for (int x = x1; x < x2; x++) {
+            SDL_SetRenderDrawColor (renderer, 0xff, 0x00, 0x00, 0x00);
+            SDL_RenderDrawPoint (renderer, x, y);
+        }
+    }
 }
 
 void Canvas::generate_background () {

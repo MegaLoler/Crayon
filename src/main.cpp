@@ -11,21 +11,20 @@ int main (int argc, char **argv) {
 
     Canvas canvas (default_width, default_height);
 
-    SDL_Window *window = nullptr;
-    SDL_Surface *surface = nullptr;
+    SDL_Window *window;
+    SDL_Renderer *renderer;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         cerr << "Could not initialize SDL: " << SDL_GetError ();
         exit (EXIT_FAILURE);
     }
 
-    window = SDL_CreateWindow ("Crayon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, SDL_WINDOW_SHOWN);
+    SDL_CreateWindowAndRenderer(default_width, default_height, 0, &window, &renderer);
     if (window == nullptr) {
         cerr << "Could not create SDL window: " << SDL_GetError ();
         exit (EXIT_FAILURE);
     }
 
-    surface = SDL_GetWindowSurface (window);
     bool quit = false;
     SDL_Event event;
     while (!quit) {
@@ -34,8 +33,8 @@ int main (int argc, char **argv) {
                 quit = true;
             }
         }
-        SDL_FillRect (surface, nullptr, SDL_MapRGB (surface->format, 0xFF, 0xFF, 0xFF));
-        SDL_UpdateWindowSurface (window);
+        canvas.render (renderer);
+        SDL_RenderPresent(renderer);
     }
 
     SDL_DestroyWindow (window);

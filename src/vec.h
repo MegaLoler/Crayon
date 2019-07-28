@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cmath>
 
 // 3d vector for positioning and colors
@@ -29,5 +31,8 @@ struct Vec {
     }
     double dot (Vec v) {
         return x * v.x + y * v.y + z * v.z;
+    }
+    double distance () {
+        return sqrt (x * x + y * y + z * z);
     }
 };

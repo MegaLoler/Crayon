@@ -1,5 +1,9 @@
+#pragma once
+
 #include <SDL2/SDL.h>
 #include <wax.h>
+#include <crayon.h>
+#include <vec.h>
 
 // stores ur drawing
 class Canvas {
@@ -17,4 +21,5 @@ class Canvas {
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
         void render (SDL_Renderer *renderer, int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0);
+        void stroke (Vec p1, Vec p2, Crayon crayon); // draw a line with a crayon
 };

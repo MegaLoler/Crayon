@@ -1,5 +1,8 @@
 #include <iostream>
 #include <canvas.h>
+#include <crayon.h>
+#include <wax.h>
+#include <vec.h>
 #include <SDL2/SDL.h>
 
 using namespace std;
@@ -10,6 +13,8 @@ const int default_height = 480;
 int main (int argc, char **argv) {
 
     Canvas canvas (default_width, default_height);
+    Wax wax (0.95, 0.45, 0.45, 0.605, 0.051);
+    Crayon crayon (10, 10, wax);
 
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -29,8 +34,19 @@ int main (int argc, char **argv) {
     SDL_Event event;
     while (!quit) {
         while (SDL_PollEvent (&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                quit = true;
+            switch (event.type) {
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+                case SDL_MOUSEMOTION:
+                    if (event.button.button == SDL_BUTTON (SDL_BUTTON_LEFT)) {
+                        double x = event.motion.x;
+                        double y = event.motion.y;
+                        double dx = event.motion.xrel;
+                        double dy = event.motion.yrel;
+                        canvas.stroke (Vec (x - dx, y - dy), Vec (x, y), crayon);
+                    }
+                    break;
             }
         }
         canvas.render (renderer);

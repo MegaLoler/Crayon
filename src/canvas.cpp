@@ -7,13 +7,14 @@ double noise () {
 
 Canvas::Canvas (int width, int height) : width (width), height (height) {
     background = new double[width * height];
-    wax = new double[width * height];
+    deposit = new double[width * height];
     generate_background ();
+    clear_canvas ();
 }
 
 Canvas::~Canvas () {
     delete background;
-    delete wax;
+    delete deposit;
 }
 
 void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
@@ -21,11 +22,28 @@ void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
     y2 = y2 ? y2 : height;
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
-            double r, g, b;
             double value = background[x + y * width];
-            r = g = b = 0xff - value;
-            SDL_SetRenderDrawColor (renderer, r, g, b, 0xff);
+            Vec bg_color (value, value, value);
+            Vec wax_color = wax.color;
+            Vec unit (1, 1, 1);
+            double wax_thickness = deposit[x + y * width];
+            Vec transmittance = (wax_color * wax.t).pow (wax_thickness) * bg_color;
+            Vec reflectance = unit - (unit - wax_color).pow (wax_thickness * wax.s);
+            Vec color = reflectance + transmittance;
+            SDL_SetRenderDrawColor (renderer, color.x * 0xff, color.y * 0xff, color.z * 0xff, 0xff);
             SDL_RenderDrawPoint (renderer, x, y);
+        }
+    }
+}
+
+void Canvas::clear_canvas () {
+    for (int i = 0; i < width * height; i++)
+        deposit[i] = 0;
+
+    // temp for testing
+    for (int y = 100; y < 200; y++) {
+        for (int x = 100; x < 200; x++) {
+            deposit[x + y * width] = 1;
         }
     }
 }
@@ -57,5 +75,8 @@ void Canvas::generate_background () {
             xv += (noise () - 0.5) * acceleration;
             yv += (noise () - 0.5) * acceleration;
         }
+    }
+    for (int i = 0; i < width * height; i++) {
+        background[i] = (0xff - background[i]) / 0xff;
     }
 }

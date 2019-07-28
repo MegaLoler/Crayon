@@ -24,7 +24,7 @@ $(BUILD_PATH)/main.o: $(BUILD_PATH) $(SRC_PATH)/main.cpp
 $(BUILD_PATH)/canvas.o: $(BUILD_PATH) $(SRC_PATH)/canvas.h $(SRC_PATH)/canvas.cpp
 	$(COMPILER) -c $(SRC_PATH)/canvas.cpp -o $(BUILD_PATH)/canvas.o
 
-$(BUILD_PATH)/crayon.o: $(BUILD_PATH) $(SRC_PATH)/wax.h $(SRC_PATH)/crayon.h $(SRC_PATH)/crayon.cpp
+$(BUILD_PATH)/crayon.o: $(BUILD_PATH) $(SRC_PATH)/wax.h $(SRC_PATH)/vec.h $(SRC_PATH)/crayon.h $(SRC_PATH)/crayon.cpp
 	$(COMPILER) -c $(SRC_PATH)/crayon.cpp -o $(BUILD_PATH)/crayon.o
 
 $(BUILD_PATH):

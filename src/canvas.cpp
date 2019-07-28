@@ -1,5 +1,6 @@
 #include <canvas.h>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
@@ -38,6 +39,85 @@ void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
     }
 }
 
+double Canvas::get_height (Vec position) {
+    // TODO: maybe interpolate
+    int x = floor (position.x);
+    int y = floor (position.y);
+    while (x < 0) x += width;
+    while (y < 0) y += height;
+    x %= width;
+    y %= height;
+    return deposit[x + y * width] + background[x + y * width];
+}
+
+double Canvas::get_wax (Vec position) {
+    // TODO: maybe interpolate
+    int x = floor (position.x);
+    int y = floor (position.y);
+    while (x < 0) x += width;
+    while (y < 0) y += height;
+    x %= width;
+    y %= height;
+    return deposit[x + y * width];
+}
+
+void Canvas::deposit_wax (Vec position, double amount) {
+    // TODO: maybe interpolate
+    int x = floor (position.x);
+    int y = floor (position.y);
+    while (x < 0) x += width;
+    while (y < 0) y += height;
+    x %= width;
+    y %= height;
+    deposit[x + y * width] += amount;
+}
+
+void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
+    Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
+    double flow_coefficient = 1 - (1 / (1 + velocity.distance ()));
+    for (int y = 0; y < crayon.height; y++) {
+        for (int x = 0; x < crayon.width; x++) {
+            Vec crayon_mask_position (x, y, 0);
+            Vec canvas_position = position + crayon_mask_position - half_crayon_size;
+            double smear_mask[3 * 3];
+            double total = 0;
+            for (int sy = 0; sy < 3; sy++) {
+                for (int sx = 0; sx < 3; sx++) {
+                    int i = sx + sy * 3;
+                    // relative smear mask coordinates from center
+                    Vec smear_position (sx - 1, sy - 1, 0);
+                    // corresponding canvas coordinates
+                    Vec canvas_smear_position = canvas_position + smear_position;
+                    if (!(smear_position.x == 0 && smear_position.y == 0)) {
+                        double directional_smearing = 0;
+                        directional_smearing *= 1 - flow_coefficient;
+                        double flow_smearing = get_height (canvas_position) - get_height (canvas_smear_position);
+                        flow_smearing *= flow_coefficient;
+                        double smearing = fmax (0, directional_smearing + flow_smearing);
+                        smearing /= smear_position.distance ();
+                        smear_mask[i] = smearing;
+                        total += smearing;
+                    }
+                }
+            }
+            cout << total << endl;
+            for (int sy = 0; sy < 3; sy++) {
+                for (int sx = 0; sx < 3; sx++) {
+                    int i = sx + sy * 3;
+                    Vec smear_position (sx - 1, sy - 1, 0);
+                    Vec canvas_smear_position = canvas_position + smear_position;
+                    double smearing = smear_mask[i] ;/// total;
+                    smearing *= crayon.wax.viscosity;
+                    // do da smear
+                    double wax = get_wax(canvas_position) * smearing;
+                    deposit_wax (canvas_position, -wax);
+                    deposit_wax (canvas_smear_position, wax);
+                }
+            }
+        }
+    }
+}
+
 void Canvas::stroke (Vec p1, Vec p2, Crayon crayon) {
     // iterate across the line
     Vec delta = p2 - p1;
@@ -48,26 +128,29 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon crayon) {
     Vec step = delta / iterations;
     Vec p = p1;
     for (int i = 0; i < iterations; i++) {
-        for (int y = 0; y < crayon.height; y++) {
-            for (int x = 0; x < crayon.width; x++) {
-                double ink = ink_step * crayon.mask[x + y * crayon.width];
-                int xx = p.x + x - crayon.width / 2;
-                int yy = p.y + y - crayon.height / 2;
-                int ix = floor (xx);
-                int iy = floor (yy);
-                //deposit[(ix % width) + (iy % height) * width] += ink;
-                double rx = xx - ix;
-                double ry = yy - iy;
-                double irx = 1 - rx;
-                double iry = 1 - ry;
-                while (ix < 0) ix += width;
-                while (iy < 0) iy += height;
-                deposit[(ix%width)+(iy%height)*width]         += ink * irx * iry;
-                deposit[((ix+1)%width)+(iy%height)*width]     += ink * rx  * iry;
-                deposit[(ix%width)+((iy+1)%height)*width]     += ink * irx * ry;
-                deposit[((ix+1)%width)+((iy+1)%height)*width] += ink * rx  * ry;
-            }
-        }
+        smear (p, delta, crayon);
+        //for (int y = 0; y < crayon.height; y++) {
+        //    for (int x = 0; x < crayon.width; x++) {
+        //        // this is all temp btw
+        //        double crayon_height = crayon.mask[x + y * crayon.width];
+        //        double ink = ink_step * crayon_height;
+        //        int xx = p.x + x - crayon.width / 2;
+        //        int yy = p.y + y - crayon.height / 2;
+        //        int ix = floor (xx);
+        //        int iy = floor (yy);
+        //        //deposit[(ix % width) + (iy % height) * width] += ink;
+        //        double rx = xx - ix;
+        //        double ry = yy - iy;
+        //        double irx = 1 - rx;
+        //        double iry = 1 - ry;
+        //        while (ix < 0) ix += width;
+        //        while (iy < 0) iy += height;
+        //        deposit[(ix%width)+(iy%height)*width]         += ink * irx * iry;
+        //        deposit[((ix+1)%width)+(iy%height)*width]     += ink * rx  * iry;
+        //        deposit[(ix%width)+((iy+1)%height)*width]     += ink * irx * ry;
+        //        deposit[((ix+1)%width)+((iy+1)%height)*width] += ink * rx  * ry;
+        //    }
+        //}
         p = p + step;
     }
 }

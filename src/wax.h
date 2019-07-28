@@ -4,6 +4,9 @@
 
 // represents some wax material
 struct Wax {
+    double friction = 2; // frictional coefficient of wax
+    double viscosity = 0.5; // viscosity
+
     Vec color;
     double t;       // transmittance
     double s;       // scattering

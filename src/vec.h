@@ -14,6 +14,9 @@ struct Vec {
     Vec operator + (Vec v) {
         return Vec (x + v.x, y + v.y, z + v.z);
     }
+    Vec operator - () {
+        return Vec (-x, -y, -z);
+    }
     Vec operator - (Vec v) {
         return Vec (x - v.x, y - v.y, z - v.z);
     }
@@ -30,9 +33,14 @@ struct Vec {
         return Vec (x / scalar, y / scalar, z / scalar);
     }
     double dot (Vec v) {
-        return x * v.x + y * v.y + z * v.z;
+        Vec vn = v.normal ();
+        Vec n = normal ();
+        return n.x * vn.x + n.y * vn.y + n.z * vn.z;
     }
     double distance () {
         return sqrt (x * x + y * y + z * z);
+    }
+    Vec normal () {
+        return *this / this->distance ();
     }
 };

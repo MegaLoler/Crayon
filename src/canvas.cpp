@@ -111,7 +111,7 @@ void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
                     // corresponding canvas coordinates
                     Vec canvas_smear_position = canvas_position + smear_position;
                     if (!(smear_position.x == 0 && smear_position.y == 0)) {
-                        double directional_smearing = 0;
+                        double directional_smearing = velocity.dot (smear_position);
                         directional_smearing *= 1 - flow_coefficient;
                         double flow_smearing = wax_height - get_height (canvas_smear_position);
                         flow_smearing *= flow_coefficient;
@@ -130,8 +130,8 @@ void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
                         Vec canvas_smear_position = canvas_position + smear_position;
                         // do da smear
                         double smearing = smear[i];
-                        smearing *= fmax (0, wax_height + crayon_height - 1);
-                        double wax = get_wax(canvas_position) * crayon.wax.viscosity * smearing / total / 8;
+                        smearing *= fmax (0, wax_height + (crayon_height - 1) * 2);
+                        double wax = get_wax (canvas_position) * crayon.wax.viscosity * smearing / total / 8;
                         deposit_wax (canvas_position, -wax, deposit_);
                         deposit_wax (canvas_smear_position, wax, deposit_);
                     }

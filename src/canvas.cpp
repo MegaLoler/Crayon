@@ -50,7 +50,7 @@ double Canvas::get_height (Vec position, double *deposit) {
     while (y < 0) y += height;
     x %= width;
     y %= height;
-    return deposit[x + y * width] + background[x + y * width];
+    return deposit[x + y * width] + pow (background[x + y * width], 10) * 2;
 }
 
 double Canvas::get_wax (Vec position, double *deposit) {

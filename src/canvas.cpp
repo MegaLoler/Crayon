@@ -21,7 +21,10 @@ void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
     y2 = y2 ? y2 : height;
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
-            SDL_SetRenderDrawColor (renderer, 0xff, 0x00, 0x00, 0x00);
+            double r, g, b;
+            double value = background[x + y * width];
+            r = g = b = 0xff - value;
+            SDL_SetRenderDrawColor (renderer, r, g, b, 0xff);
             SDL_RenderDrawPoint (renderer, x, y);
         }
     }

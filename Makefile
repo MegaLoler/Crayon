@@ -14,15 +14,18 @@ DEBUGGER		::= gdb
 
 all: $(TARGET)
 
-$(TARGET): $(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o
+$(TARGET): $(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o
 	$(COMPILER) -lSDL2 \
-		$(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o -o $(TARGET)
+		$(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o -o $(TARGET)
 
 $(BUILD_PATH)/main.o: $(BUILD_PATH) $(SRC_PATH)/main.cpp
 	$(COMPILER) -c $(SRC_PATH)/main.cpp -o $(BUILD_PATH)/main.o
 
 $(BUILD_PATH)/canvas.o: $(BUILD_PATH) $(SRC_PATH)/canvas.h $(SRC_PATH)/canvas.cpp
 	$(COMPILER) -c $(SRC_PATH)/canvas.cpp -o $(BUILD_PATH)/canvas.o
+
+$(BUILD_PATH)/crayon.o: $(BUILD_PATH) $(SRC_PATH)/wax.h $(SRC_PATH)/crayon.h $(SRC_PATH)/crayon.cpp
+	$(COMPILER) -c $(SRC_PATH)/crayon.cpp -o $(BUILD_PATH)/crayon.o
 
 $(BUILD_PATH):
 	mkdir $(BUILD_PATH)

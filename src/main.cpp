@@ -49,6 +49,14 @@ int main (int argc, char **argv) {
                     canvas.stroke (Vec (x - dx, y - dy), Vec (x, y), crayon, 1);
                 }
                 break;
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym) {
+                    case SDLK_t:
+                        // reset crayon tip
+                        crayon.init_mask ();
+                        break;
+                }
+                break;
         }
 
         // render to texture

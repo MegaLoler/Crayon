@@ -236,6 +236,19 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
 
 void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force) {
     Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
+    int x1 = position.x - half_crayon_size.x - 1;
+    int y1 = position.y - half_crayon_size.y - 1;
+    int x2 = x1 + crayon.width + 2;
+    int y2 = y1 + crayon.height + 2;
+    for (int y = y1; y < y2; y++) {
+        for (int x = x1; x < x2; x++) {
+            int xx = x % width;
+            int yy = y % height;
+            while (xx < 0) xx += width;
+            while (yy < 0) yy += height;
+            deposit_[xx + yy * width] = deposit[xx + yy * width];
+        }
+    }
     for (int y = 0; y < crayon.height; y++) {
         for (int x = 0; x < crayon.width; x++) {
             int crayon_i = x + y * crayon.width;
@@ -262,10 +275,18 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force)
             double total_friction = paper_friction + wax_friction;
             double amount = (total_friction * dp) * force * speed;
             amount *= fmax (0, adjacent + crayon_height - 1);
-            //amount = fmax (-1, fmin (1, amount));
-            amount = fmax (0, fmin (1, amount));
+            amount = fmax (0, fmin (0.1, amount));
             crayon.mask[crayon_i] -= amount;
-            deposit_wax(canvas_position, amount);
+            deposit_wax(canvas_position, amount, deposit_);
+        }
+    }
+    for (int y = y1; y < y2; y++) {
+        for (int x = x1; x < x2; x++) {
+            int xx = x % width;
+            int yy = y % height;
+            while (xx < 0) xx += width;
+            while (yy < 0) yy += height;
+            deposit[xx + yy * width] = deposit_[xx + yy * width];
         }
     }
 }

@@ -17,11 +17,14 @@ class Canvas {
         double *deposit;    // how much wax is deposited on the canvas at different spots
         double *deposit_;   // back buffer
 
-        void smear (Vec position, Vec velocity, Crayon crayon); // smear wax one step
+        void adjust_height (Crayon &crayon, Vec position, double force);
+        void smear (Vec position, Vec velocity, Crayon &crayon); // smear wax one step
+        void draw_wax (Vec position, Vec velocity, Crayon &crayon, double force); // move wax from crayon to canvas due to friction
 
         double get_wax (Vec position, double *deposit = nullptr); // get amount of wax at position
         void deposit_wax (Vec position, double amount, double *deposit = nullptr); // deposit some wax here
         double get_height (Vec position, double *deposit = nullptr); // get the total height at a position
+        double get_background_height (Vec position); // get height of the background
 
     public:
         Canvas (int width, int height);
@@ -29,6 +32,6 @@ class Canvas {
 
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
-        void render (SDL_Renderer *renderer, int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0);
-        void stroke (Vec p1, Vec p2, Crayon crayon); // draw a line with a crayon
+        void render (SDL_Renderer *renderer, Crayon &crayon, int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0);
+        void stroke (Vec p1, Vec p2, Crayon &crayon, double force); // draw a line with a crayon
 };

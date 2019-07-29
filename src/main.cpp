@@ -44,13 +44,13 @@ int main (int argc, char **argv) {
                         double y = event.motion.y;
                         double dx = event.motion.xrel;
                         double dy = event.motion.yrel;
-                        canvas.stroke (Vec (x - dx, y - dy), Vec (x, y), crayon);
+                        canvas.stroke (Vec (x - dx, y - dy), Vec (x, y), crayon, 1);
                     }
                     break;
             }
         }
-        canvas.render (renderer);
-        SDL_RenderPresent(renderer);
+        canvas.render (renderer, crayon);
+        SDL_RenderPresent (renderer);
     }
 
     SDL_DestroyWindow (window);

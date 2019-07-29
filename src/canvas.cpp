@@ -21,7 +21,7 @@ Canvas::~Canvas () {
     //delete deposit;
 }
 
-void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
+void Canvas::render (SDL_Renderer *renderer, Crayon &crayon, int x1, int y1, int x2, int y2) {
     x2 = x2 ? x2 : width;
     y2 = y2 ? y2 : height;
     for (int y = y1; y < y2; y++) {
@@ -38,11 +38,22 @@ void Canvas::render (SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
             SDL_RenderDrawPoint (renderer, x, y);
         }
     }
+    // temp: draw the crayon mask in the corner
+    for (int y = 0; y < crayon.height; y++) {
+        for (int x = 0; x < crayon.width; x++) {
+            double value = crayon.mask[x + y * crayon.width];
+            value = fmax (0, fmin (1, value)) * 0xff;
+            SDL_SetRenderDrawColor (renderer, value, value, value, 0xff);
+            SDL_RenderDrawPoint (renderer, x, y);
+        }
+    }
 }
 
 double Canvas::get_height (Vec position, double *deposit) {
-    if (deposit == nullptr)
-        deposit = this->deposit;
+    return get_background_height (position) + get_wax (position, deposit);
+}
+
+double Canvas::get_background_height (Vec position) {
     // TODO: maybe interpolate
     int x = floor (position.x);
     int y = floor (position.y);
@@ -50,7 +61,8 @@ double Canvas::get_height (Vec position, double *deposit) {
     while (y < 0) y += height;
     x %= width;
     y %= height;
-    return deposit[x + y * width] + pow (background[x + y * width], 10) * 2;
+    // TODO: consider this
+    return pow (background[x + y * width], 10) * 2;
 }
 
 double Canvas::get_wax (Vec position, double *deposit) {
@@ -79,7 +91,7 @@ void Canvas::deposit_wax (Vec position, double amount, double *deposit) {
     deposit[x + y * width] += amount;
 }
 
-void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
+void Canvas::smear (Vec position, Vec velocity, Crayon &crayon) {
     Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
     double flow_coefficient = 1 - (1 / (1 + velocity.distance ()));
     int x1 = position.x - half_crayon_size.x - 1;
@@ -130,7 +142,7 @@ void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
                         Vec canvas_smear_position = canvas_position + smear_position;
                         // do da smear
                         double smearing = smear[i];
-                        smearing *= fmax (0, wax_height + (crayon_height - 1) * 2);
+                        smearing *= fmax (0, wax_height + crayon_height - 1);
                         double wax = get_wax (canvas_position) * crayon.wax.viscosity * smearing / total / 8;
                         deposit_wax (canvas_position, -wax, deposit_);
                         deposit_wax (canvas_smear_position, wax, deposit_);
@@ -150,39 +162,88 @@ void Canvas::smear (Vec position, Vec velocity, Crayon crayon) {
     }
 }
 
-void Canvas::stroke (Vec p1, Vec p2, Crayon crayon) {
+void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
+    // get highest part of crayon mask
+    double crayon_max = 0;
+    for (int i = 0; i < crayon.width * crayon.height; i++) {
+        if (crayon.mask[i] > crayon_max)
+            crayon_max = crayon.mask[i];
+    }
+    // lower the crayon to base level
+    double delta = 1 - crayon_max;
+    for (int i = 0; i < crayon.width * crayon.height; i++)
+        crayon.mask[i] += delta;
+
+    double wax_resist = crayon.wax.compression_resistance;
+    double epsilon = wax_resist / 4;
+
+    // find out the min and max paper cell heights
+    double paper_min = 1000;
+    double paper_max = 0;
+    Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
+    int x1 = position.x - half_crayon_size.x;
+    int y1 = position.y - half_crayon_size.y;
+    int x2 = x1 + crayon.width;
+    int y2 = y1 + crayon.height;
+    for (int y = y1; y < y2; y++) {
+        for (int x = x1; x < x2; x++) {
+            // TODO: which one? lol
+            double height = get_background_height (Vec (x, y, 0));
+            //double height = get_height (Vec (x, y, 0));
+            if (height < paper_min)
+                paper_min = height;
+            if (height > paper_max)
+                paper_max = height;
+        }
+    }
+    // figure out how far down the given force is able to push teh crayon
+    // TODO
+    /////////
+
+    // move the crayon up to that place
+    double mid = (paper_max + paper_min) / 2;
+    for (int i = 0; i < crayon.width * crayon.height; i++)
+        crayon.mask[i] -= mid;
+}
+
+void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force) {
+    Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
+    int x1 = position.x - half_crayon_size.x;
+    int y1 = position.y - half_crayon_size.y;
+    int x2 = x1 + crayon.width;
+    int y2 = y1 + crayon.height;
+    for (int y = y1; y < y2; y++) {
+        for (int x = x1; x < x2; x++) {
+            Vec crayon_mask_position (x, y, 0);
+            Vec canvas_position = position + crayon_mask_position - half_crayon_size;
+            double wax_height = get_height (canvas_position);
+            double crayon_height = crayon.mask[x + y * crayon.width];
+            // get the paper cell in the movement direction
+            double distance = fmax (0.01, fmax (velocity.x, velocity.y));
+            Vec dir = velocity / distance;
+            Vec adjacent_position = position + dir;
+            double adjacent = get_height (adjacent_position);
+            double slope = (adjacent - wax_height) / distance;
+            double angle = atan (slope);
+            Vec normal = Vec (cos (angle), -sin (angle), 0);
+            Vec down_force = Vec (0, -force, 0);
+            double dot = normal.dot (down_force);
+            double blend = 1 / (1 + get_wax_height (adjacent_position);
+        }
+    }
+}
+
+void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force) {
     // iterate across the line
     Vec delta = p2 - p1;
     double distance = delta.distance ();
     int iterations = ceil (distance);
-    double total_ink = distance * .1;    // total amount in stroke
-    double ink_step = total_ink / iterations; // amount deposited in one iterations
     Vec step = delta / iterations;
     Vec p = p1;
     for (int i = 0; i < iterations; i++) {
+        adjust_height (crayon, p, force);
         smear (p, delta, crayon);
-        //for (int y = 0; y < crayon.height; y++) {
-        //    for (int x = 0; x < crayon.width; x++) {
-        //        // this is all temp btw
-        //        double crayon_height = crayon.mask[x + y * crayon.width];
-        //        double ink = ink_step * crayon_height;
-        //        int xx = p.x + x - crayon.width / 2;
-        //        int yy = p.y + y - crayon.height / 2;
-        //        int ix = floor (xx);
-        //        int iy = floor (yy);
-        //        //deposit[(ix % width) + (iy % height) * width] += ink;
-        //        double rx = xx - ix;
-        //        double ry = yy - iy;
-        //        double irx = 1 - rx;
-        //        double iry = 1 - ry;
-        //        while (ix < 0) ix += width;
-        //        while (iy < 0) iy += height;
-        //        deposit[(ix%width)+(iy%height)*width]         += ink * irx * iry;
-        //        deposit[((ix+1)%width)+(iy%height)*width]     += ink * rx  * iry;
-        //        deposit[(ix%width)+((iy+1)%height)*width]     += ink * irx * ry;
-        //        deposit[((ix+1)%width)+((iy+1)%height)*width] += ink * rx  * ry;
-        //    }
-        //}
+        draw_wax (p, delta, crayon, force);
         p = p + step;
     }
 }

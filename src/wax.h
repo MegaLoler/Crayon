@@ -7,6 +7,7 @@ struct Wax {
     double friction = 2; // frictional coefficient of wax
     //double viscosity = 0.5; // viscosity
     double viscosity = 1; // viscosity
+    double compression_resistance = 0.0005;
 
     Vec color;
     double t;       // transmittance

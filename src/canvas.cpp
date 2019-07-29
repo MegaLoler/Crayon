@@ -14,6 +14,9 @@ Canvas::Canvas (int width, int height) : width (width), height (height) {
     deposit_ = new double[width * height];
     generate_background ();
     clear_canvas ();
+    damage1 = Vec (0, 0, 0);
+    damage2 = Vec (width, height, 0);
+    damage = true;
 }
 
 Canvas::~Canvas () {
@@ -21,9 +24,11 @@ Canvas::~Canvas () {
     //delete deposit;
 }
 
-void Canvas::render (SDL_Renderer *renderer, Crayon &crayon, int x1, int y1, int x2, int y2) {
-    x2 = x2 ? x2 : width;
-    y2 = y2 ? y2 : height;
+void Canvas::render (SDL_Renderer *renderer, Crayon &crayon) {
+    int x1 = damage1.x;
+    int y1 = damage1.y;
+    int x2 = damage2.x;
+    int y2 = damage2.y;
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
             double value = background[x + y * width];
@@ -47,6 +52,9 @@ void Canvas::render (SDL_Renderer *renderer, Crayon &crayon, int x1, int y1, int
             SDL_RenderDrawPoint (renderer, x, y);
         }
     }
+    damage1 = Vec (0, 0, 0);
+    damage2 = Vec (0, 0, 0);
+    damage = false;
 }
 
 double Canvas::get_height (Vec position, double *deposit) {
@@ -169,7 +177,7 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
         if (crayon.mask[i] > crayon_max)
             crayon_max = crayon.mask[i];
     }
-    // lower the crayon to base level
+    // lower the crayon to base level (= 1)
     double delta = 1 - crayon_max;
     for (int i = 0; i < crayon.width * crayon.height; i++)
         crayon.mask[i] += delta;
@@ -187,9 +195,8 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
     int y2 = y1 + crayon.height;
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
-            // TODO: which one? lol
-            double height = get_background_height (Vec (x, y, 0));
-            //double height = get_height (Vec (x, y, 0));
+            //double height = get_background_height (Vec (x, y, 0));
+            double height = get_height (Vec (x, y, 0));
             if (height < paper_min)
                 paper_min = height;
             if (height > paper_max)
@@ -197,7 +204,9 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
         }
     }
     // figure out how far down the given force is able to push teh crayon
-    // TODO
+    while (paper_max - paper_min < epsilon) {
+        break;
+    }
     /////////
 
     // move the crayon up to that place
@@ -208,27 +217,35 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
 
 void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force) {
     Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
-    int x1 = position.x - half_crayon_size.x;
-    int y1 = position.y - half_crayon_size.y;
-    int x2 = x1 + crayon.width;
-    int y2 = y1 + crayon.height;
-    for (int y = y1; y < y2; y++) {
-        for (int x = x1; x < x2; x++) {
+    for (int y = 0; y < crayon.height; y++) {
+        for (int x = 0; x < crayon.width; x++) {
+            int crayon_i = x + y * crayon.width;
             Vec crayon_mask_position (x, y, 0);
             Vec canvas_position = position + crayon_mask_position - half_crayon_size;
-            double wax_height = get_height (canvas_position);
-            double crayon_height = crayon.mask[x + y * crayon.width];
+            double crayon_height = crayon.mask[crayon_i];
             // get the paper cell in the movement direction
-            double distance = fmax (0.01, fmax (velocity.x, velocity.y));
+            double distance = fmax (0.01, fmax (abs (velocity.x), abs (velocity.y)));
             Vec dir = velocity / distance;
-            Vec adjacent_position = position + dir;
+            Vec adjacent_position = canvas_position + dir;
+            double speed = velocity.distance ();
+            //double wax_height = get_background_height (canvas_position);
+            //double adjacent = get_background_height (adjacent_position);
+            double wax_height = get_height (canvas_position);
             double adjacent = get_height (adjacent_position);
             double slope = (adjacent - wax_height) / distance;
             double angle = atan (slope);
             Vec normal = Vec (cos (angle), -sin (angle), 0);
-            Vec down_force = Vec (0, -force, 0);
-            double dot = normal.dot (down_force);
-            double blend = 1 / (1 + get_wax_height (adjacent_position);
+            double dp = normal.dot (Vec (0, -1, 0));
+            dp = fmax (0, dp);
+            double blend = 1 / (1 + get_wax (adjacent_position));
+            double paper_friction = blend * friction;
+            double wax_friction = (1 - blend) * crayon.wax.friction;
+            double total_friction = paper_friction + wax_friction;
+            double amount = (total_friction * dp) * force * speed;
+            amount *= fmax (0, adjacent + crayon_height - 1);
+            amount = fmax (-1, fmin (1, amount));
+            crayon.mask[crayon_i] -= amount;
+            deposit_wax(canvas_position, amount);
         }
     }
 }
@@ -246,6 +263,17 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force) {
         draw_wax (p, delta, crayon, force);
         p = p + step;
     }
+    Vec half (crayon.width / 2 + 2, crayon.height / 2 + 2, 0);
+    Vec new_damage1 = Vec (fmin (p1.x, p2.x), fmin (p1.y, p2.y)) - half;
+    Vec new_damage2 = Vec (fmax (p1.x, p2.x), fmax (p1.y, p2.y)) + half;
+    if (damage) {
+        damage1 = Vec (fmin (new_damage1.x, damage1.x), fmin (new_damage1.y, damage1.y));
+        damage2 = Vec (fmax (new_damage2.x, damage2.x), fmax (new_damage2.y, damage2.y));
+    } else {
+        damage1 = new_damage1;
+        damage2 = new_damage2;
+    }
+    damage = true;
 }
 
 void Canvas::clear_canvas () {
@@ -253,11 +281,11 @@ void Canvas::clear_canvas () {
         deposit[i] = 0;
 
     // temp for testing
-    for (int y = 100; y < 200; y++) {
-        for (int x = 100; x < 200; x++) {
-            deposit[x + y * width] = 1;
-        }
-    }
+    //for (int y = 100; y < 200; y++) {
+    //    for (int x = 100; x < 200; x++) {
+    //        deposit[x + y * width] = 1;
+    //    }
+    //}
 }
 
 void Canvas::generate_background () {

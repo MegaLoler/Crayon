@@ -17,7 +17,7 @@ void Crayon::init_mask () {
             double dy = 2.0 * y / height - 1;
             double d = sqrt (dx * dx + dy * dy);
             double value = fmax (0, cos (d * M_PI / 2));
-            mask[x + y * width] = value;
+            mask[x + y * width] = value * 100;
         }
     }
 }

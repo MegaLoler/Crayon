@@ -17,6 +17,11 @@ class Canvas {
         double *deposit;    // how much wax is deposited on the canvas at different spots
         double *deposit_;   // back buffer
 
+        // rectangle of area to redraw each frame
+        Vec damage1;
+        Vec damage2;
+        bool damage;
+
         void adjust_height (Crayon &crayon, Vec position, double force);
         void smear (Vec position, Vec velocity, Crayon &crayon); // smear wax one step
         void draw_wax (Vec position, Vec velocity, Crayon &crayon, double force); // move wax from crayon to canvas due to friction
@@ -32,6 +37,6 @@ class Canvas {
 
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
-        void render (SDL_Renderer *renderer, Crayon &crayon, int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0);
+        void render (SDL_Renderer *renderer, Crayon &crayon);
         void stroke (Vec p1, Vec p2, Crayon &crayon, double force); // draw a line with a crayon
 };

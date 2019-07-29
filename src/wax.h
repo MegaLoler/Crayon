@@ -5,8 +5,7 @@
 // represents some wax material
 struct Wax {
     double friction = 0.5; // frictional coefficient of wax
-    //double viscosity = 0.5; // viscosity
-    double viscosity = 1; // viscosity
+    double viscosity = 0.5; // viscosity
     double compression_resistance = 0.0005;
 
     Vec color;

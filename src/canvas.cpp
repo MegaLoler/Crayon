@@ -189,6 +189,7 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
     double paper_min = 1000;
     double paper_max = 0;
     Vec half_crayon_size (crayon.width / 2, crayon.height / 2, 0);
+    Vec origin = position - half_crayon_size;
     int x1 = position.x - half_crayon_size.x;
     int y1 = position.y - half_crayon_size.y;
     int x2 = x1 + crayon.width;
@@ -204,8 +205,26 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
         }
     }
     // figure out how far down the given force is able to push teh crayon
-    while (paper_max - paper_min < epsilon) {
-        break;
+    while ((paper_max - paper_min) > epsilon) {
+        double mid = (paper_max + paper_min) / 2;
+        double required_force = 0;
+        // figure out the required force
+        int i = 0;
+        for (int y = 0; y < crayon.height; y++) {
+            for (int x = 0; x < crayon.width; x++) {
+                Vec paper_position = origin + Vec (x, y, 0);
+                double paper_height = get_height (paper_position);
+                double crayon_height = crayon.mask[i++] - mid;
+                double delta = paper_height + crayon_height - 1;
+                if (delta > 0)
+                    required_force += wax_resist * delta;
+            }
+        }
+        /////////
+        if (force < required_force)
+            paper_min = mid;
+        else
+            paper_max = mid;
     }
     /////////
 
@@ -243,7 +262,8 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force)
             double total_friction = paper_friction + wax_friction;
             double amount = (total_friction * dp) * force * speed;
             amount *= fmax (0, adjacent + crayon_height - 1);
-            amount = fmax (-1, fmin (1, amount));
+            //amount = fmax (-1, fmin (1, amount));
+            amount = fmax (0, fmin (1, amount));
             crayon.mask[crayon_i] -= amount;
             deposit_wax(canvas_position, amount);
         }

@@ -14,9 +14,6 @@ Canvas::Canvas (int width, int height) : width (width), height (height) {
     deposit_ = new double[width * height];
     generate_background ();
     clear_canvas ();
-    damage1 = Vec (0, 0, 0);
-    damage2 = Vec (width, height, 0);
-    damage = true;
 }
 
 Canvas::~Canvas () {
@@ -33,11 +30,11 @@ void Canvas::render (SDL_Renderer *renderer, Crayon &crayon) {
         for (int x = x1; x < x2; x++) {
             double value = background[x + y * width];
             Vec bg_color (value, value, value);
-            Vec wax_color = wax.color;
+            Vec wax_color = crayon.wax.color;
             Vec unit (1, 1, 1);
             double wax_thickness = deposit[x + y * width];
-            Vec transmittance = (wax_color * wax.t).pow (wax_thickness) * bg_color;
-            Vec reflectance = unit - (unit - wax_color).pow (wax_thickness * wax.s);
+            Vec transmittance = (wax_color * crayon.wax.t).pow (wax_thickness) * bg_color;
+            Vec reflectance = unit - (unit - wax_color).pow (wax_thickness * crayon.wax.s);
             Vec color = reflectance + transmittance;
             SDL_SetRenderDrawColor (renderer, color.x * 0xff, color.y * 0xff, color.z * 0xff, 0xff);
             SDL_RenderDrawPoint (renderer, x, y);
@@ -70,7 +67,8 @@ double Canvas::get_background_height (Vec position) {
     x %= width;
     y %= height;
     // TODO: consider this
-    return pow (background[x + y * width], 10) * 2;
+    //return pow (background[x + y * width], 10) * 2;
+    return background[x + y * width];
 }
 
 double Canvas::get_wax (Vec position, double *deposit) {
@@ -170,7 +168,7 @@ void Canvas::smear (Vec position, Vec velocity, Crayon &crayon) {
     }
 }
 
-void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
+void Canvas::adjust_height (Crayon &crayon, Vec position, double force, bool scrape) {
     // get highest part of crayon mask
     double crayon_max = 0;
     for (int i = 0; i < crayon.width * crayon.height; i++) {
@@ -181,6 +179,9 @@ void Canvas::adjust_height (Crayon &crayon, Vec position, double force) {
     double delta = 1 - crayon_max;
     for (int i = 0; i < crayon.width * crayon.height; i++)
         crayon.mask[i] += delta;
+
+    if (scrape)
+        return;
 
     double wax_resist = crayon.wax.compression_resistance;
     double epsilon = wax_resist / 4;
@@ -291,7 +292,7 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force)
     }
 }
 
-void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force) {
+void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force, bool smear_only) {
     // iterate across the line
     Vec delta = p2 - p1;
     double distance = delta.distance ();
@@ -299,9 +300,10 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force) {
     Vec step = delta / iterations;
     Vec p = p1;
     for (int i = 0; i < iterations; i++) {
-        adjust_height (crayon, p, force);
-        smear (p, delta, crayon);
-        draw_wax (p, delta, crayon, force);
+        adjust_height (crayon, p, force, smear_only);
+        smear (p, delta * (smear_only ? 10000 : 1), crayon);
+        if (!smear_only)
+            draw_wax (p, delta, crayon, force);
         p = p + step;
     }
     Vec half (crayon.width / 2 + 2, crayon.height / 2 + 2, 0);
@@ -327,6 +329,10 @@ void Canvas::clear_canvas () {
     //        deposit[x + y * width] = 1;
     //    }
     //}
+
+    damage1 = Vec (0, 0, 0);
+    damage2 = Vec (width, height, 0);
+    damage = true;
 }
 
 void Canvas::generate_background () {

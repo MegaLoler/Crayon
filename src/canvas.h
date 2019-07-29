@@ -12,7 +12,6 @@ class Canvas {
 
         int width;
         int height;
-        Wax wax = Wax (0.95, 0.45, 0.45, 0.605, 0.051); // tmp , the wax used in the deposit
         double *background; // the paper texture, a height map
         double *deposit;    // how much wax is deposited on the canvas at different spots
         double *deposit_;   // back buffer
@@ -22,7 +21,7 @@ class Canvas {
         Vec damage2;
         bool damage;
 
-        void adjust_height (Crayon &crayon, Vec position, double force);
+        void adjust_height (Crayon &crayon, Vec position, double force, bool scrape = false);
         void smear (Vec position, Vec velocity, Crayon &crayon); // smear wax one step
         void draw_wax (Vec position, Vec velocity, Crayon &crayon, double force); // move wax from crayon to canvas due to friction
 
@@ -38,5 +37,5 @@ class Canvas {
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
         void render (SDL_Renderer *renderer, Crayon &crayon);
-        void stroke (Vec p1, Vec p2, Crayon &crayon, double force); // draw a line with a crayon
+        void stroke (Vec p1, Vec p2, Crayon &crayon, double force, bool smear_only = false); // draw a line with a crayon
 };

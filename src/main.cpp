@@ -14,10 +14,11 @@ int main (int argc, char **argv) {
 
     Canvas canvas (default_width, default_height);
     //Wax wax (0.95, 0.45, 0.45, 0.605, 0.051);
-    //Wax wax (0.999, 0.55, 0.2, 0.605, 0.042);
+    Wax wax (0.999, 0.55, 0.2, 0.605, 0.042);
     //Wax wax (0.95, 0.9, 0.2, 0.715, 0.111);
     //Wax wax (0.35, 0.8, 0.35, 0.385, 0.096);
-    Wax wax (0.3, 0.5, 0.9, 0.715, 0.054);
+    //Wax wax (0.3, 0.5, 0.9, 0.715, 0.054);
+    //Wax wax (0.65, 0.4, 0.9, 0.385, 0.06);
     Crayon crayon (15, 15, wax);
 
     SDL_Window *window;

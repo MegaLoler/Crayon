@@ -71,6 +71,7 @@ int main (int argc, char **argv) {
     double y = 0;
     bool quit = false;
     bool smear = false;
+    double max_force = 100;
     SDL_Event event;
     while (!quit) {
         SDL_WaitEvent (&event);
@@ -78,12 +79,22 @@ int main (int argc, char **argv) {
             case SDL_QUIT:
                 quit = true;
                 break;
+            case SDL_FINGERDOWN:
+                px = event.tfinger.x * default_width;
+                py = event.tfinger.y * default_height;
+                break;
+            case SDL_FINGERMOTION:
+                x = event.tfinger.x * default_width;
+                y = event.tfinger.y * default_height;
+                canvas.stroke (Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
+                px = x;
+                py = y;
+                break;
             case SDL_MOUSEMOTION:
                 x = event.motion.x;
                 y = event.motion.y;
                 if (event.button.button == SDL_BUTTON (SDL_BUTTON_LEFT)) {
-                    double force = 100;
-                    canvas.stroke (Vec (px, py), Vec (x, y), crayon, force, smear);
+                    canvas.stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
                 }
                 px = x;
                 py = y;

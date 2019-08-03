@@ -65,6 +65,8 @@ int main (int argc, char **argv) {
 
     SDL_Texture *display = SDL_CreateTexture (renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, default_width, default_height);
 
+    cout << "Touch devices found: " << SDL_GetNumTouchDevices () << endl;
+
     double px = 0;
     double py = 0;
     double x = 0;
@@ -86,6 +88,7 @@ int main (int argc, char **argv) {
             case SDL_FINGERMOTION:
                 x = event.tfinger.x * default_width;
                 y = event.tfinger.y * default_height;
+		cout << event.tfinger.pressure << endl;
                 canvas.stroke (Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
                 px = x;
                 py = y;

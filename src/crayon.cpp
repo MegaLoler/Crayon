@@ -1,7 +1,7 @@
 #include <crayon.h>
 #include <cmath>
 
-Crayon::Crayon (int width, int height, Wax wax) : width (width), height (height), wax (wax) {
+Crayon::Crayon (int width, int height, Wax *wax) : width (width), height (height), wax (wax) {
     mask = new double[width * height];
     init_mask ();
 }

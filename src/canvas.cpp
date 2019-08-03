@@ -9,9 +9,10 @@ double noise () {
 }
 
 Canvas::Canvas (int width, int height) : width (width), height (height) {
-    background = new double[width * height];
-    deposit = new double[width * height];
-    deposit_ = new double[width * height];
+    int size = width * height;
+    background = new double[size];
+    deposit = new Stack[size];
+    deposit_ = new Stack[size];
     generate_background ();
     clear_canvas ();
 }
@@ -28,11 +29,13 @@ void Canvas::render (SDL_Renderer *renderer, Crayon &crayon) {
     int y2 = damage2.y;
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
-            double value = background[x + y * width];
+            int i = x + y * width;
+            double value = background[i];
+            Stack stack = deposit[i];
             Vec bg_color (value, value, value);
-            Vec wax_color = crayon.wax.color;
+            Vec wax_color = crayon.wax.color;//stack.layers[0].wax->color;
+            double wax_thickness = stack.layers[0].thickness;
             Vec unit (1, 1, 1);
-            double wax_thickness = deposit[x + y * width];
             Vec transmittance = (wax_color * crayon.wax.t).pow (wax_thickness) * bg_color;
             Vec reflectance = unit - (unit - wax_color).pow (wax_thickness * crayon.wax.s);
             Vec color = reflectance + transmittance;
@@ -54,7 +57,7 @@ void Canvas::render (SDL_Renderer *renderer, Crayon &crayon) {
     damage = false;
 }
 
-double Canvas::get_height (Vec position, double *deposit) {
+double Canvas::get_height (Vec position, Stack *deposit) {
     return get_background_height (position) + get_wax (position, deposit);
 }
 
@@ -71,7 +74,8 @@ double Canvas::get_background_height (Vec position) {
     return background[x + y * width];
 }
 
-double Canvas::get_wax (Vec position, double *deposit) {
+// returns net thickness
+double Canvas::get_wax (Vec position, Stack *deposit) {
     if (deposit == nullptr)
         deposit = this->deposit;
     // TODO: maybe interpolate
@@ -81,10 +85,10 @@ double Canvas::get_wax (Vec position, double *deposit) {
     while (y < 0) y += height;
     x %= width;
     y %= height;
-    return deposit[x + y * width];
+    return deposit[x + y * width].thickness ();
 }
 
-void Canvas::deposit_wax (Vec position, double amount, double *deposit) {
+void Canvas::deposit_wax (Vec position, Wax &wax, double amount, Stack *deposit) {
     if (deposit == nullptr)
         deposit = this->deposit;
     // TODO: maybe interpolate
@@ -94,7 +98,33 @@ void Canvas::deposit_wax (Vec position, double amount, double *deposit) {
     while (y < 0) y += height;
     x %= width;
     y %= height;
-    deposit[x + y * width] += amount;
+    deposit[x + y * width].deposit (wax, amount);
+}
+
+void Canvas::deposit_stack (Vec position, Stack &stack, Stack *deposit) {
+    if (deposit == nullptr)
+        deposit = this->deposit;
+    // TODO: maybe interpolate
+    int x = floor (position.x);
+    int y = floor (position.y);
+    while (x < 0) x += width;
+    while (y < 0) y += height;
+    x %= width;
+    y %= height;
+    deposit[x + y * width].deposit_stack (stack);
+}
+
+Stack Canvas::take_wax (Vec position, double amount, Stack *deposit) {
+    if (deposit == nullptr)
+        deposit = this->deposit;
+    // TODO: maybe interpolate
+    int x = floor (position.x);
+    int y = floor (position.y);
+    while (x < 0) x += width;
+    while (y < 0) y += height;
+    x %= width;
+    y %= height;
+    return deposit[x + y * width].take (amount);
 }
 
 void Canvas::smear (Vec position, Vec velocity, Crayon &crayon) {
@@ -150,8 +180,8 @@ void Canvas::smear (Vec position, Vec velocity, Crayon &crayon) {
                         double smearing = smear[i];
                         smearing *= fmax (0, wax_height + crayon_height - 1);
                         double wax = get_wax (canvas_position) * crayon.wax.viscosity * smearing / total / 8;
-                        deposit_wax (canvas_position, -wax, deposit_);
-                        deposit_wax (canvas_smear_position, wax, deposit_);
+                        Stack taken = take_wax (canvas_position, wax, deposit_);
+                        deposit_stack (canvas_smear_position, taken, deposit_);
                     }
                 }
             }
@@ -278,7 +308,7 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon &crayon, double force)
             amount *= fmax (0, adjacent + crayon_height - 1);
             amount = fmax (0, fmin (0.1, amount));
             crayon.mask[crayon_i] -= amount;
-            deposit_wax(canvas_position, amount, deposit_);
+            deposit_wax(canvas_position, crayon.wax, amount, deposit_);
         }
     }
     for (int y = y1; y < y2; y++) {
@@ -321,7 +351,7 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon &crayon, double force, bool smear_on
 
 void Canvas::clear_canvas () {
     for (int i = 0; i < width * height; i++)
-        deposit[i] = 0;
+        deposit[i].clear ();
 
     // temp for testing
     //for (int y = 100; y < 200; y++) {

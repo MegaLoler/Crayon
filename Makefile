@@ -7,7 +7,7 @@ INSTALL_PATH	::= /usr/bin
 TARGET			::= $(BUILD_PATH)/crayon
 
 # programs
-COMPILER		::= g++ -Wall -Og -I$(SRC_PATH)
+COMPILER		::= g++ -Wall -Og -g -I$(SRC_PATH)
 DEBUGGER		::= gdb
 
 
@@ -21,7 +21,7 @@ $(TARGET): $(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o
 $(BUILD_PATH)/main.o: $(BUILD_PATH) $(SRC_PATH)/main.cpp
 	$(COMPILER) -c $(SRC_PATH)/main.cpp -o $(BUILD_PATH)/main.o
 
-$(BUILD_PATH)/canvas.o: $(BUILD_PATH) $(SRC_PATH)/canvas.h $(SRC_PATH)/canvas.cpp
+$(BUILD_PATH)/canvas.o: $(BUILD_PATH) $(SRC_PATH)/stack.h $(SRC_PATH)/canvas.h $(SRC_PATH)/canvas.cpp
 	$(COMPILER) -c $(SRC_PATH)/canvas.cpp -o $(BUILD_PATH)/canvas.o
 
 $(BUILD_PATH)/crayon.o: $(BUILD_PATH) $(SRC_PATH)/wax.h $(SRC_PATH)/vec.h $(SRC_PATH)/crayon.h $(SRC_PATH)/crayon.cpp

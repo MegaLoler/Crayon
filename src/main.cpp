@@ -7,8 +7,8 @@
 
 using namespace std;
 
-const int default_width = 640;
-const int default_height = 480;
+const int default_width = 600;
+const int default_height = 400;
 
 int main (int argc, char **argv) {
 

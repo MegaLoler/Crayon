@@ -107,7 +107,8 @@ struct Stack {
             layers[top].thickness -= layer_amount;
             top--;
         }
-        if (amount > 0) {
+        // TODO: make sure this NEVER HAPPENS!!!! MEAHAHAHAHAHA
+        if (amount > 0.0000001) {
             cerr << "Tried to take too much wax! " << amount << endl;
         }
         return stack.flip ();

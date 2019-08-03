@@ -34,6 +34,8 @@ class Canvas {
         double get_height (Vec position, Stack *deposit = nullptr); // get the total height at a position
         double get_background_height (Vec position); // get height of the background
 
+        Vec clamp_position (Vec position); // make sure a position is in bounds
+
     public:
         Canvas (int width, int height);
         ~Canvas ();

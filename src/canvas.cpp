@@ -23,10 +23,10 @@ Canvas::~Canvas () {
 }
 
 void Canvas::render (SDL_Renderer *renderer) {
-    int x1 = damage1.x;
-    int y1 = damage1.y;
-    int x2 = damage2.x;
-    int y2 = damage2.y;
+    int x1 = fmax (0, fmin (width, damage1.x));
+    int y1 = fmax (0, fmin (height, damage1.y));
+    int x2 = fmax (0, fmin (width, damage2.x));
+    int y2 = fmax (0, fmin (height, damage2.y));
     for (int y = y1; y < y2; y++) {
         for (int x = x1; x < x2; x++) {
             int i = x + y * width;
@@ -55,14 +55,15 @@ double Canvas::get_height (Vec position, Stack *deposit) {
     return get_background_height (position) + get_wax (position, deposit);
 }
 
+Vec Canvas::clamp_position (Vec position) {
+    // TODO: maybe interpolate, maybe wrap instead
+    return Vec (fmax (0, fmin (width, position.x)), fmax (0, fmin (height, position.y)), 0);
+}
+
 double Canvas::get_background_height (Vec position) {
-    // TODO: maybe interpolate
-    int x = floor (position.x);
-    int y = floor (position.y);
-    while (x < 0) x += width;
-    while (y < 0) y += height;
-    x %= width;
-    y %= height;
+    position = clamp_position (position);
+    int x = position.x;
+    int y = position.y;
     // TODO: consider this
     //return pow (background[x + y * width], 10) * 2;
     return background[x + y * width];
@@ -70,54 +71,38 @@ double Canvas::get_background_height (Vec position) {
 
 // returns net thickness
 double Canvas::get_wax (Vec position, Stack *deposit) {
+    position = clamp_position (position);
     if (deposit == nullptr)
         deposit = this->deposit;
-    // TODO: maybe interpolate
-    int x = floor (position.x);
-    int y = floor (position.y);
-    while (x < 0) x += width;
-    while (y < 0) y += height;
-    x %= width;
-    y %= height;
+    int x = position.x;
+    int y = position.y;
     return deposit[x + y * width].thickness ();
 }
 
 void Canvas::deposit_wax (Vec position, Wax *wax, double amount, Stack *deposit) {
+    position = clamp_position (position);
     if (deposit == nullptr)
         deposit = this->deposit;
-    // TODO: maybe interpolate
-    int x = floor (position.x);
-    int y = floor (position.y);
-    while (x < 0) x += width;
-    while (y < 0) y += height;
-    x %= width;
-    y %= height;
+    int x = position.x;
+    int y = position.y;
     deposit[x + y * width].deposit (wax, amount);
 }
 
 void Canvas::deposit_stack (Vec position, Stack &stack, Stack *deposit) {
+    position = clamp_position (position);
     if (deposit == nullptr)
         deposit = this->deposit;
-    // TODO: maybe interpolate
-    int x = floor (position.x);
-    int y = floor (position.y);
-    while (x < 0) x += width;
-    while (y < 0) y += height;
-    x %= width;
-    y %= height;
+    int x = position.x;
+    int y = position.y;
     deposit[x + y * width].deposit_stack (stack);
 }
 
 Stack Canvas::take_wax (Vec position, double amount, Stack *deposit) {
+    position = clamp_position (position);
     if (deposit == nullptr)
         deposit = this->deposit;
-    // TODO: maybe interpolate
-    int x = floor (position.x);
-    int y = floor (position.y);
-    while (x < 0) x += width;
-    while (y < 0) y += height;
-    x %= width;
-    y %= height;
+    int x = position.x;
+    int y = position.y;
     return deposit[x + y * width].take (amount);
 }
 
@@ -326,7 +311,7 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon *crayon, double force, bool smear_on
     Vec p = p1;
     for (int i = 0; i < iterations; i++) {
         adjust_height (crayon, p, force, smear_only);
-        //smear (p, delta * (smear_only ? 10000 : 1), crayon);
+        smear (p, delta * (smear_only ? 10000 : 1), crayon);
         if (!smear_only)
             draw_wax (p, delta, crayon, force);
         p = p + step;

@@ -145,6 +145,46 @@ class QT_Canvas : public QWidget {
             painter.drawImage (0, 0, canvas->get_image ());
         }
 
+        void keyPressEvent (QKeyEvent *event) {
+            switch (event->key ()) {
+                case Qt::Key_1:
+                    crayon = crayon_red;
+                    break;
+                case Qt::Key_2:
+                    crayon = crayon_orange;
+                    break;
+                case Qt::Key_3:
+                    crayon = crayon_yellow;
+                    break;
+                case Qt::Key_4:
+                    crayon = crayon_green;
+                    break;
+                case Qt::Key_5:
+                    crayon = crayon_blue;
+                    break;
+                case Qt::Key_6:
+                    crayon = crayon_purple;
+                    break;
+                case Qt::Key_7:
+                    crayon = crayon_brown;
+                    break;
+                case Qt::Key_8:
+                    crayon = crayon_black;
+                    break;
+                case Qt::Key_9:
+                    crayon = crayon_grey;
+                    break;
+                case Qt::Key_0:
+                    crayon = crayon_white;
+                    break;
+                case Qt::Key_C:
+                    canvas->clear_canvas ();
+                    break;
+                default:
+                    break;
+            }
+        }
+
         void tabletEvent (QTabletEvent *event) {
             x = event->x ();
             y = event->y ();

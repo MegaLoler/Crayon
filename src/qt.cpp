@@ -41,7 +41,6 @@ class QT_Canvas : public QWidget {
         double py = 0;
         double x = 0;
         double y = 0;
-        double max_force = 100;
         Mode mode = DRAW;
 
         // the different colored waxes
@@ -243,11 +242,10 @@ class QT_Canvas : public QWidget {
             px = x;
             py = y;
             double pressure = event->pressure ();
-            double force = max_force * pressure;
             switch (event->type ()) {
                 case QEvent::TabletMove:
                     if (mouse_down) {
-                        canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, mode);
+                        canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, pressure, mode);
                         update ();
                     }
                     break;
@@ -270,7 +268,7 @@ class QT_Canvas : public QWidget {
             px = x;
             py = y;
             if (mouse_down) {
-                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force / 2.0, mode);
+                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, 0.5, mode);
                 update ();
             }
         }

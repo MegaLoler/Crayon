@@ -28,7 +28,7 @@ class Canvas {
         Vec damage2;
         bool damage;
 
-        void erase (Vec position, Crayon *crayon);
+        void erase (Vec position, Crayon *crayon, double force);
         void adjust_height (Crayon *crayon, Vec position, double force, bool scrape = false);
         void smear (Vec position, Vec velocity, Crayon *crayon); // smear wax one step
         void draw_wax (Vec position, Vec velocity, Crayon *crayon, double force); // move wax from crayon to canvas due to friction

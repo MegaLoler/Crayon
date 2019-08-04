@@ -303,7 +303,7 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon *crayon, double force)
     }
 }
 
-void Canvas::erase (Vec position, Crayon *crayon) {
+void Canvas::erase (Vec position, Crayon *crayon, double force) {
     Vec half_crayon_size (crayon->width / 2, crayon->height / 2, 0);
     int x1 = position.x - half_crayon_size.x;
     int y1 = position.y - half_crayon_size.y;
@@ -315,7 +315,8 @@ void Canvas::erase (Vec position, Crayon *crayon) {
             int yy = y % height;
             while (xx < 0) xx += width;
             while (yy < 0) yy += height;
-            deposit[xx + yy * width].clear ();
+            Stack *stack = &deposit[xx + yy * width];
+            stack->take (stack->thickness () * force);
         }
     }
 }
@@ -328,13 +329,15 @@ void Canvas::stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, dou
     Vec step = delta / iterations;
     Vec p = p1;
     for (int i = 0; i < iterations; i++) {
+        adjust_height (crayon, p, force * 100, mode != DRAW);
         if (mode == ERASE) {
-            erase (p, crayon);
-        } else {
-            adjust_height (crayon, p, force, mode == SMEAR);
-            smear (p, delta * (mode == SMEAR ? 10000 : 1), crayon);
-            if (mode == DRAW)
-                draw_wax (p, delta, crayon, force);
+            erase (p, crayon, force);
+            smear (p, delta * 10000, crayon);
+        } else if (mode == DRAW) {
+            smear (p, delta, crayon);
+            draw_wax (p, delta, crayon, force * 100);
+        } else if (mode == SMEAR) {
+            smear (p, delta * 10000, crayon);
         }
         p = p + step;
         // call the process callback intermittantly

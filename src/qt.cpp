@@ -145,6 +145,30 @@ class QT_Canvas : public QWidget {
             painter.drawImage (0, 0, canvas->get_image ());
         }
 
+        void tabletEvent (QTabletEvent *event) {
+            x = event->x ();
+            y = event->y ();
+            int ppx = px;
+            int ppy = py;
+            px = x;
+            py = y;
+            double pressure = event->pressure ();
+            double force = max_force * pressure;
+            switch (event->type ()) {
+                case QEvent::TabletMove:
+                    canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, smear);
+                    break;
+                case QEvent::TabletPress:
+                    mouse_down = true;
+                    break;
+                case QEvent::TabletRelease:
+                    mouse_down = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         void mouseMoveEvent (QMouseEvent *event) {
             x = event->x ();
             y = event->y ();

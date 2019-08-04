@@ -90,8 +90,7 @@ int main (int argc, char **argv) {
     double x = 0;
     double y = 0;
     bool quit = false;
-    bool smear = false;
-    double max_force = 100;
+    Mode mode = DRAW;
     SDL_Event event;
     while (!quit) {
         SDL_WaitEvent (&event);
@@ -106,7 +105,7 @@ int main (int argc, char **argv) {
             case SDL_FINGERMOTION:
                 x = event.tfinger.x * default_width;
                 y = event.tfinger.y * default_height;
-                canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
+                canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, event.tfinger.pressure, mode);
                 px = x;
                 py = y;
                 break;
@@ -114,7 +113,7 @@ int main (int argc, char **argv) {
                 x = event.motion.x;
                 y = event.motion.y;
                 if (event.button.button == SDL_BUTTON (SDL_BUTTON_LEFT)) {
-                    canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, max_force, smear);
+                    canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, 0.5, mode);
                 }
                 px = x;
                 py = y;
@@ -160,8 +159,13 @@ int main (int argc, char **argv) {
                         crayon->init_mask ();
                         break;
                     case SDLK_s:
-                        //smear = true;
-                        smear = !smear;
+                        mode = SMEAR;
+                        break;
+                    case SDLK_d:
+                        mode = DRAW;
+                        break;
+                    case SDLK_e:
+                        mode = ERASE;
                         break;
                 }
                 break;

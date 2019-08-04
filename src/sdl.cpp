@@ -24,6 +24,9 @@ class SDL_Canvas : public Canvas {
         }
 };
 
+// intermittant stroke processing
+void process () {}
+
 int main (int argc, char **argv) {
 
     Wax *wax_red    = new Wax (0.95,  0.45, 0.45,  0.605,  0.051);
@@ -103,7 +106,7 @@ int main (int argc, char **argv) {
             case SDL_FINGERMOTION:
                 x = event.tfinger.x * default_width;
                 y = event.tfinger.y * default_height;
-                canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
+                canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
                 px = x;
                 py = y;
                 break;
@@ -111,7 +114,7 @@ int main (int argc, char **argv) {
                 x = event.motion.x;
                 y = event.motion.y;
                 if (event.button.button == SDL_BUTTON (SDL_BUTTON_LEFT)) {
-                    canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
+                    canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, max_force, smear);
                 }
                 px = x;
                 py = y;

@@ -303,7 +303,7 @@ void Canvas::draw_wax (Vec position, Vec velocity, Crayon *crayon, double force)
     }
 }
 
-void Canvas::stroke (Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only) {
+void Canvas::stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only) {
     // iterate across the line
     Vec delta = p2 - p1;
     double distance = delta.distance ();
@@ -316,6 +316,8 @@ void Canvas::stroke (Vec p1, Vec p2, Crayon *crayon, double force, bool smear_on
         if (!smear_only)
             draw_wax (p, delta, crayon, force);
         p = p + step;
+        // call the process callback intermittantly
+        process ();
     }
     Vec half (crayon->width / 2 + 2, crayon->height / 2 + 2, 0);
     Vec new_damage1 = Vec (fmin (p1.x, p2.x), fmin (p1.y, p2.y)) - half;

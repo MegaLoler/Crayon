@@ -71,6 +71,10 @@ class QT_Canvas : public QWidget {
         // the current crayon
         Crayon *crayon;
 
+        static void process () {
+            QCoreApplication::processEvents();
+        }
+
     public:
         QImage_Canvas *canvas;
 
@@ -144,12 +148,14 @@ class QT_Canvas : public QWidget {
         void mouseMoveEvent (QMouseEvent *event) {
             x = event->x ();
             y = event->y ();
-            if (mouse_down) {
-                canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
-                update ();
-            }
+            int ppx = px;
+            int ppy = py;
             px = x;
             py = y;
+            if (mouse_down) {
+                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force, smear);
+                update ();
+            }
         }
 
         void mousePressEvent (QMouseEvent *event) {

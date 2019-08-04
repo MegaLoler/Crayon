@@ -44,5 +44,5 @@ class Canvas {
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
         void render ();
-        void stroke (Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only = false); // draw a line with a crayon
+        void stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only = false); // draw a line with a crayon
 };

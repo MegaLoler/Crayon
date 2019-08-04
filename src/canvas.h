@@ -19,9 +19,9 @@ class Canvas {
 
         int width;
         int height;
-        double *background; // the paper texture, a height map
-        Stack *deposit;     // how much wax is deposited on the canvas at different spots
-        Stack *deposit_;    // back buffer
+        double *background = nullptr; // the paper texture, a height map
+        Stack *deposit = nullptr;     // how much wax is deposited on the canvas at different spots
+        Stack *deposit_ = nullptr;    // back buffer
 
         // rectangle of area to redraw each frame
         Vec damage1;
@@ -42,15 +42,20 @@ class Canvas {
 
         Vec clamp_position (Vec position); // make sure a position is in bounds
 
+        void free_resources ();
+
     protected:
         virtual void draw_pixel (int x, int y, Vec color) = 0;
+        void resize_canvas (int width, int height);
 
     public:
         Canvas (int width, int height);
         virtual ~Canvas ();
 
+        void resize (int width, int height);
+        void invalidate ();             // indicate entire screen region is damaged
         void generate_background ();    // generates the background txture
-        void clear_canvas ();           // clears the wax deposit
+        void clear_canvas (Stack *deposit = nullptr, int width = 0, int height = 0);           // clears the wax deposit
         void render ();
         void stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, Mode = DRAW); // draw a line with a crayon
 };

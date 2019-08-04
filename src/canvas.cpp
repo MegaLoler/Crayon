@@ -9,19 +9,67 @@ double noise () {
 }
 
 Canvas::Canvas (int width, int height) : width (width), height (height) {
-    int size = width * height;
-    background = new double[size];
-    deposit = new Stack[size];
-    deposit_ = new Stack[size];
+    resize_canvas (width, height);
     generate_background ();
-    clear_canvas ();
 }
 
 Canvas::~Canvas () {
-    // i have 0 clue how this is supposed to work
-    //delete background;
-    //delete [] deposit;
-    //delete [] deposit_;
+    free_resources ();
+}
+
+void Canvas::free_resources () {
+    if (background != nullptr)
+        delete background;
+
+    //for (int i = 0; i < width * height; i++) {
+    //    if (deposit != nullptr)
+    //        delete deposit[i];
+    //    if (deposit_ != nullptr)
+    //        delete deposit_[i];
+    //}
+
+    if (deposit != nullptr)
+        delete deposit;
+    if (deposit_ != nullptr)
+        delete deposit_;
+}
+
+void Canvas::resize_canvas (int width, int height) {
+    int size = width * height;
+    double *new_background = new double[size];
+    Stack *new_deposit = new Stack[size];
+    Stack *new_deposit_ = new Stack[size];
+
+    clear_canvas (new_deposit, width, height);
+    if (deposit != nullptr) {
+        int min_width = fmin (width, this->width);
+        int min_height = fmin (height, this->height);
+        for (int y = 0; y < min_height; y++) {
+            for (int x = 0; x < min_width; x++) {
+                new_deposit[x + y * width] = deposit[x + y * this->width];
+            }
+        }
+    }
+    // reuse the background, just wrap it
+    // bc its too slow to regen each time lol
+    if (background != nullptr) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int bg_x = x % this->width;
+                int bg_y = y % this->height;
+                new_background[x + y * width] = background[bg_x + bg_y * this->width];
+            }
+        }
+    }
+
+    free_resources ();
+
+    this->width = width;
+    this->height = height;
+    background = new_background;
+    deposit = new_deposit;
+    deposit_ = new_deposit_;
+    invalidate ();
 }
 
 void Canvas::render () {
@@ -58,7 +106,7 @@ double Canvas::get_height (Vec position, Stack *deposit) {
 
 Vec Canvas::clamp_position (Vec position) {
     // TODO: maybe interpolate, maybe wrap instead
-    return Vec (fmax (0, fmin (width, position.x)), fmax (0, fmin (height, position.y)), 0);
+    return Vec (fmax (0, fmin (width - 1, position.x)), fmax (0, fmin (height - 1, position.y)), 0);
 }
 
 double Canvas::get_background_height (Vec position) {
@@ -356,17 +404,25 @@ void Canvas::stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, dou
     damage = true;
 }
 
-void Canvas::clear_canvas () {
+void Canvas::clear_canvas (Stack *deposit, int width, int height) {
+    if (deposit == nullptr) {
+        deposit = this->deposit;
+        width = this->width;
+        height = this->height;
+    }
     for (int i = 0; i < width * height; i++)
         deposit[i].clear ();
+    invalidate ();
+}
 
+void Canvas::invalidate () {
     damage1 = Vec (0, 0, 0);
     damage2 = Vec (width, height, 0);
     damage = true;
 }
 
 void Canvas::generate_background () {
-    const int fiber_count = 100000;
+    const int fiber_count = width * height / 3.072;
     const int fiber_length = 100;
     const double acceleration = 0.2;
     const double velocity = 1;

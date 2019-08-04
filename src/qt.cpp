@@ -27,6 +27,11 @@ class QImage_Canvas : public Canvas {
             return image;
         }
 
+        void on_resize (int width, int height) {
+            image = QImage (width, height, QImage::Format_RGB32);
+            resize_canvas (width, height);
+        }
+
     protected:
         void draw_pixel (int x, int y, Vec color) {
             QRgb value = qRgb(color.x * 0xff, color.y * 0xff, color.z * 0xff);
@@ -279,6 +284,14 @@ class QT_Canvas : public QWidget {
 
         void mouseReleaseEvent (QMouseEvent *event) {
             mouse_down = false;
+        }
+
+        void resizeEvent (QResizeEvent *event) {
+            QSize size = event->size ();
+            int width = size.width ();
+            int height = size.height ();
+            canvas->on_resize (width, height);
+            update ();
         }
 };
 

@@ -5,6 +5,13 @@
 #include <stack.h>
 #include <vec.h>
 
+// stroke mode
+enum Mode {
+    DRAW,       // draws wax
+    SMEAR,      // smears wax
+    ERASE,      // erases wax
+};
+
 // stores ur drawing
 class Canvas {
     private:
@@ -21,6 +28,7 @@ class Canvas {
         Vec damage2;
         bool damage;
 
+        void erase (Vec position, Crayon *crayon);
         void adjust_height (Crayon *crayon, Vec position, double force, bool scrape = false);
         void smear (Vec position, Vec velocity, Crayon *crayon); // smear wax one step
         void draw_wax (Vec position, Vec velocity, Crayon *crayon, double force); // move wax from crayon to canvas due to friction
@@ -44,5 +52,5 @@ class Canvas {
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
         void render ();
-        void stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only = false); // draw a line with a crayon
+        void stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, Mode = DRAW); // draw a line with a crayon
 };

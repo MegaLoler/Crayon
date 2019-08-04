@@ -7,10 +7,12 @@ crayon simulation based on [this paper](https://www.researchgate.net/publication
 
 ## controls
 
-C clears canvas
+as of rn
 
-number keys 1 thru 0 change colors
+in qt and sdl version:
+- C clears canvas
+- number keys 1 thru 0 change colors
 
-in the qt version, keys to change size/reinit the crayon tip are (B)ig, (M)edium, and (L)ittle
-
-S toggles between smear and drawing mode
+in the qt version:
+- change size/reinit the crayon tip with (B)ig, (M)edium, and (L)ittle
+- set the mode with (D)raw, (S)mudge, and (E)rase

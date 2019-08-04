@@ -41,8 +41,8 @@ class QT_Canvas : public QWidget {
         double py = 0;
         double x = 0;
         double y = 0;
-        bool smear = false;     // smear only mode
         double max_force = 100;
+        Mode mode = DRAW;
 
         // the different colored waxes
         Wax *wax_red;
@@ -68,8 +68,23 @@ class QT_Canvas : public QWidget {
         }
 
         void set_title () {
-            string mode = smear ? "smear" : "drawing";
-            setWindowTitle (QString::fromStdString ("Crayon [" + mode + " mode] [" + color_name + "] [" + size_name + "px]"));
+            string mode_name;
+            switch (mode) {
+                case DRAW:
+                    mode_name = "drawing";
+                    break;
+                case SMEAR:
+                    mode_name = "smudging";
+                    break;
+                case ERASE:
+                    mode_name = "erasing";
+                    break;
+                default:
+                    mode_name = "?";
+                    break;
+            }
+            string title = "Crayon [" + mode_name + " mode] [" + color_name + "] [" + size_name + "px]";
+            setWindowTitle (QString::fromStdString (title));
         }
 
         void set_color (Wax *wax) {
@@ -101,6 +116,11 @@ class QT_Canvas : public QWidget {
             crayon->width = crayon->height = diameter;
             crayon->init_mask ();
             size_name = to_string ((int) diameter);
+            set_title ();
+        }
+
+        void set_mode (Mode mode) {
+            this->mode = mode;
             set_title ();
         }
 
@@ -201,9 +221,14 @@ class QT_Canvas : public QWidget {
                 case Qt::Key_L:
                     set_size (5);
                     break;
+                case Qt::Key_D:
+                    set_mode (DRAW);
+                    break;
                 case Qt::Key_S:
-                    smear = !smear;
-                    set_title ();
+                    set_mode (SMEAR);
+                    break;
+                case Qt::Key_E:
+                    set_mode (ERASE);
                     break;
                 default:
                     break;
@@ -222,7 +247,7 @@ class QT_Canvas : public QWidget {
             switch (event->type ()) {
                 case QEvent::TabletMove:
                     if (mouse_down) {
-                        canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, smear);
+                        canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, mode);
                         update ();
                     }
                     break;
@@ -245,7 +270,7 @@ class QT_Canvas : public QWidget {
             px = x;
             py = y;
             if (mouse_down) {
-                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force / 2.0, smear);
+                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force / 2.0, mode);
                 update ();
             }
         }

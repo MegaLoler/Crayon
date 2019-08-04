@@ -83,6 +83,7 @@ class QT_Canvas : public QWidget {
             resize (width, height);
             setWindowTitle ("Crayon");
             setMouseTracking (true);
+	    setAttribute (Qt::WA_TabletTracking);
 
             // create the different colored waxes
             wax_red    = new Wax (0.95,  0.45, 0.45,  0.605,  0.051);
@@ -196,7 +197,10 @@ class QT_Canvas : public QWidget {
             double force = max_force * pressure;
             switch (event->type ()) {
                 case QEvent::TabletMove:
-                    canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, smear);
+		    if (mouse_down) {
+                        canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, smear);
+			update ();
+		    }
                     break;
                 case QEvent::TabletPress:
                     mouse_down = true;
@@ -217,7 +221,7 @@ class QT_Canvas : public QWidget {
             px = x;
             py = y;
             if (mouse_down) {
-                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force, smear);
+                canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, max_force / 2.0, smear);
                 update ();
             }
         }

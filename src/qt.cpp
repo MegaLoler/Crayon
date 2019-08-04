@@ -8,8 +8,6 @@
 #include <QWidget>
 #include <QMouseEvent>
 #include <QPainter>
-#include <QThread>
-#include <QObject>
 
 using namespace std;
 
@@ -33,32 +31,6 @@ class QImage_Canvas : public Canvas {
         void draw_pixel (int x, int y, Vec color) {
             QRgb value = qRgb(color.x * 0xff, color.y * 0xff, color.z * 0xff);
             image.setPixel(x, y, value);
-        }
-};
-
-class Worker : public QObject {
-    Q_OBJECT
-
-    private:
-        QT_Canvas *window;
-
-    public:
-        Worker (QT_Canvas *window) : window (window) {}
-
-    public slots:
-        void process() {
-            Vec p1 = Vec (window->px, window->py);
-            Vec p2 = Vec (window->x, window->y);
-            window->canvas->stroke (p1, p2, window->crayon, window->max_force, window->smear);
-        }
-
-    signals:
-        void finished () {
-            window->update ();
-        }
-
-        void error (QString err) {
-            // print it or somethin idk
         }
 };
 
@@ -173,15 +145,8 @@ class QT_Canvas : public QWidget {
             x = event->x ();
             y = event->y ();
             if (mouse_down) {
-                QThread* thread = new QThread;
-                Worker* worker = new Worker (this);
-                worker->moveToThread (thread);
-                connect(worker, SIGNAL (error(QString)), this, SLOT (errorString(QString)));
-                connect(thread, SIGNAL (started()), worker, SLOT (process()));
-                connect(worker, SIGNAL (finished()), thread, SLOT (quit()));
-                connect(worker, SIGNAL (finished()), worker, SLOT (deleteLater()));
-                connect(thread, SIGNAL (finished()), thread, SLOT (deleteLater()));
-                thread->start();
+                canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
+                update ();
             }
             px = x;
             py = y;
@@ -194,8 +159,6 @@ class QT_Canvas : public QWidget {
         void mouseReleaseEvent (QMouseEvent *event) {
             mouse_down = false;
         }
-
-    friend class Worker;
 };
 
 int main (int argc, char **argv) {

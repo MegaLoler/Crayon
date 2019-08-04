@@ -18,11 +18,13 @@ Canvas::Canvas (int width, int height) : width (width), height (height) {
 }
 
 Canvas::~Canvas () {
+    // i have 0 clue how this is supposed to work
     //delete background;
-    //delete deposit;
+    //delete [] deposit;
+    //delete [] deposit_;
 }
 
-void Canvas::render (SDL_Renderer *renderer) {
+void Canvas::render () {
     int x1 = fmax (0, fmin (width, damage1.x));
     int y1 = fmax (0, fmin (height, damage1.y));
     int x2 = fmax (0, fmin (width, damage2.x));
@@ -33,8 +35,7 @@ void Canvas::render (SDL_Renderer *renderer) {
             double value = background[i];
             Vec bg_color (value, value, value);
             Vec color = deposit[i].render (bg_color);
-            SDL_SetRenderDrawColor (renderer, color.x * 0xff, color.y * 0xff, color.z * 0xff, 0xff);
-            SDL_RenderDrawPoint (renderer, x, y);
+            draw_pixel (x, y, color);
         }
     }
 //    // temp: draw the crayon mask in the corner
@@ -356,6 +357,8 @@ void Canvas::generate_background () {
             double ry = y - iy;
             double irx = 1 - rx;
             double iry = 1 - ry;
+            while (ix < 0) ix += width;
+            while (iy < 0) iy += height;
             background[(ix%width)+(iy%height)*width]         += ink * irx * iry;
             background[((ix+1)%width)+(iy%height)*width]     += ink * rx  * iry;
             background[(ix%width)+((iy+1)%height)*width]     += ink * irx * ry;

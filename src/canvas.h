@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SDL2/SDL.h>
 #include <wax.h>
 #include <crayon.h>
 #include <stack.h>
@@ -8,8 +7,7 @@
 
 // stores ur drawing
 class Canvas {
-    //private:
-    public:
+    private:
         double friction = 2; // frictional coefficient of canvas
 
         int width;
@@ -36,12 +34,15 @@ class Canvas {
 
         Vec clamp_position (Vec position); // make sure a position is in bounds
 
+    protected:
+        virtual void draw_pixel (int x, int y, Vec color) = 0;
+
     public:
         Canvas (int width, int height);
-        ~Canvas ();
+        virtual ~Canvas ();
 
         void generate_background ();    // generates the background txture
         void clear_canvas ();           // clears the wax deposit
-        void render (SDL_Renderer *renderer);
+        void render ();
         void stroke (Vec p1, Vec p2, Crayon *crayon, double force, bool smear_only = false); // draw a line with a crayon
 };

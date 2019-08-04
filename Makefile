@@ -4,22 +4,37 @@ SRC_PATH		::= src
 INSTALL_PATH	::= /usr/bin
 
 # targets
-TARGET			::= $(BUILD_PATH)/crayon
+TARGET_SDL		::= $(BUILD_PATH)/crayon_sdl
+TARGET_QT		::= $(BUILD_PATH)/crayon_qt
 
 # programs
 COMPILER		::= g++ -Wall -Og -g -I$(SRC_PATH)
 DEBUGGER		::= gdb
 
+# flags
+QT_FLAGS        ::= $(shell pkg-config --cflags --libs Qt5Widgets) -fPIC
 
 
-all: $(TARGET)
 
-$(TARGET): $(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o
+all: sdl qt
+
+sdl: $(TARGET_SDL)
+
+qt: $(TARGET_QT)
+
+$(TARGET_QT): $(BUILD_PATH)/qt.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o
+	$(COMPILER) $(QT_FLAGS) \
+		$(BUILD_PATH)/qt.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o -o $(TARGET_QT)
+
+$(TARGET_SDL): $(BUILD_PATH)/sdl.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o
 	$(COMPILER) -lSDL2 \
-		$(BUILD_PATH)/main.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o -o $(TARGET)
+		$(BUILD_PATH)/sdl.o $(BUILD_PATH)/canvas.o $(BUILD_PATH)/crayon.o -o $(TARGET_SDL)
 
-$(BUILD_PATH)/main.o: $(BUILD_PATH) $(SRC_PATH)/main.cpp
-	$(COMPILER) -c $(SRC_PATH)/main.cpp -o $(BUILD_PATH)/main.o
+$(BUILD_PATH)/qt.o: $(BUILD_PATH) $(SRC_PATH)/qt.cpp
+	$(COMPILER) $(QT_FLAGS) -c $(SRC_PATH)/qt.cpp -o $(BUILD_PATH)/qt.o
+
+$(BUILD_PATH)/sdl.o: $(BUILD_PATH) $(SRC_PATH)/sdl.cpp
+	$(COMPILER) -c $(SRC_PATH)/sdl.cpp -o $(BUILD_PATH)/sdl.o
 
 $(BUILD_PATH)/canvas.o: $(BUILD_PATH) $(SRC_PATH)/stack.h $(SRC_PATH)/canvas.h $(SRC_PATH)/canvas.cpp
 	$(COMPILER) -c $(SRC_PATH)/canvas.cpp -o $(BUILD_PATH)/canvas.o
@@ -35,9 +50,13 @@ clean: $(BUILD_PATH)
 	rm -rf $(BUILD_PATH)
 
 .PHONY:
-run: $(TARGET)
-	./$(TARGET)
+run: $(TARGET_QT)
+	./$(TARGET_QT)
 
 .PHONY:
-debug: $(TARGET)
-	$(DEBUGGER) $(TARGET)
+test: $(TARGET_SDL)
+	./$(TARGET_SDL)
+
+.PHONY:
+debug: $(TARGET_SDL)
+	$(DEBUGGER) $(TARGET_SDL)

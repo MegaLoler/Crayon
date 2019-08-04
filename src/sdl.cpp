@@ -10,9 +10,22 @@ using namespace std;
 const int default_width = 600;
 const int default_height = 400;
 
+class SDL_Canvas : public Canvas {
+    private:
+        SDL_Renderer *renderer;
+
+    public:
+        SDL_Canvas (int width, int height, SDL_Renderer *renderer) : Canvas (width, height), renderer (renderer) {}
+
+    protected:
+        void draw_pixel (int x, int y, Vec color) {
+            SDL_SetRenderDrawColor (renderer, color.x * 0xff, color.y * 0xff, color.z * 0xff, 0xff);
+            SDL_RenderDrawPoint (renderer, x, y);
+        }
+};
+
 int main (int argc, char **argv) {
 
-    Canvas canvas (default_width, default_height);
     Wax *wax_red    = new Wax (0.95,  0.45, 0.45,  0.605,  0.051);
     Wax *wax_orange = new Wax (0.999, 0.55, 0.2,   0.605,  0.042);
     Wax *wax_yellow = new Wax (0.95,  0.9,  0.2,   0.715,  0.111);
@@ -35,6 +48,26 @@ int main (int argc, char **argv) {
     Crayon *crayon_white  = new Crayon (10, 10, wax_white);
     Crayon *crayon = crayon_red;
 
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+
+    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
+        cerr << "Could not initialize SDL: " << SDL_GetError ();
+        exit (EXIT_FAILURE);
+    }
+
+    SDL_CreateWindowAndRenderer (default_width, default_height, 0, &window, &renderer);
+    if (window == nullptr) {
+        cerr << "Could not create SDL window: " << SDL_GetError ();
+        exit (EXIT_FAILURE);
+    }
+
+    SDL_Texture *display = SDL_CreateTexture (renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, default_width, default_height);
+
+    cout << "Touch devices found: " << SDL_GetNumTouchDevices () << endl;
+
+    SDL_Canvas *canvas = new SDL_Canvas (default_width, default_height, renderer);
+
     // TEMP: for testing
     //for (int y = 100; y < 200; y++) {
     //    for (int x = 100; x < 200; x++) {
@@ -48,24 +81,6 @@ int main (int argc, char **argv) {
     //        canvas.deposit_wax (position, wax_red, 1);
     //    }
     //}
-
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        cerr << "Could not initialize SDL: " << SDL_GetError ();
-        exit (EXIT_FAILURE);
-    }
-
-    SDL_CreateWindowAndRenderer(default_width, default_height, 0, &window, &renderer);
-    if (window == nullptr) {
-        cerr << "Could not create SDL window: " << SDL_GetError ();
-        exit (EXIT_FAILURE);
-    }
-
-    SDL_Texture *display = SDL_CreateTexture (renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, default_width, default_height);
-
-    cout << "Touch devices found: " << SDL_GetNumTouchDevices () << endl;
 
     double px = 0;
     double py = 0;
@@ -88,8 +103,7 @@ int main (int argc, char **argv) {
             case SDL_FINGERMOTION:
                 x = event.tfinger.x * default_width;
                 y = event.tfinger.y * default_height;
-		cout << event.tfinger.pressure << endl;
-                canvas.stroke (Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
+                canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force * event.tfinger.pressure, smear);
                 px = x;
                 py = y;
                 break;
@@ -97,7 +111,7 @@ int main (int argc, char **argv) {
                 x = event.motion.x;
                 y = event.motion.y;
                 if (event.button.button == SDL_BUTTON (SDL_BUTTON_LEFT)) {
-                    canvas.stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
+                    canvas->stroke (Vec (px, py), Vec (x, y), crayon, max_force, smear);
                 }
                 px = x;
                 py = y;
@@ -136,7 +150,7 @@ int main (int argc, char **argv) {
                         break;
                     case SDLK_c:
                         // clear canvas
-                        canvas.clear_canvas ();
+                        canvas->clear_canvas ();
                         break;
                     case SDLK_t:
                         // reset crayon tip
@@ -158,17 +172,39 @@ int main (int argc, char **argv) {
         }
 
         // render to texture
-        SDL_SetRenderTarget(renderer, display);
-        canvas.render (renderer);
+        SDL_SetRenderTarget (renderer, display);
+        canvas->render ();
 
         // display texture
-        SDL_SetRenderTarget(renderer, nullptr);
-        SDL_RenderCopy(renderer, display, nullptr, nullptr);
+        SDL_SetRenderTarget (renderer, nullptr);
+        SDL_RenderCopy (renderer, display, nullptr, nullptr);
         SDL_RenderPresent (renderer);
     }
 
     SDL_DestroyWindow (window);
     SDL_Quit ();
+
+    delete canvas;
+    delete wax_red;
+    delete wax_orange;
+    delete wax_yellow;
+    delete wax_green;
+    delete wax_blue;
+    delete wax_purple;
+    delete wax_brown;
+    delete wax_black;
+    delete wax_grey;
+    delete wax_white;
+    delete crayon_red;
+    delete crayon_orange;
+    delete crayon_yellow;
+    delete crayon_green;
+    delete crayon_blue;
+    delete crayon_purple;
+    delete crayon_brown;
+    delete crayon_black;
+    delete crayon_grey;
+    delete crayon_white;
 
     return 0;
 }

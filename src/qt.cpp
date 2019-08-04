@@ -234,6 +234,26 @@ class QT_Canvas : public QWidget {
                 case Qt::Key_E:
                     set_mode (ERASE);
                     break;
+                case Qt::Key_W:
+                    canvas->set_bg_color (Vec (1, 1, 1));
+                    update ();
+                    break;
+                case Qt::Key_I:
+                    canvas->set_bg_color (Vec (0.26, 0.25, 0.245));
+                    update ();
+                    break;
+                case Qt::Key_R:
+                    canvas->set_bg_color (Vec (0.95, 0.45, 0.45));
+                    update ();
+                    break;
+                case Qt::Key_G:
+                    canvas->set_bg_color (Vec (0.35, 0.8, 0.35));
+                    update ();
+                    break;
+                case Qt::Key_Q:
+                    canvas->set_bg_color (Vec (0.3, 0.5, 0.9));
+                    update ();
+                    break;
                 default:
                     break;
             }

@@ -72,6 +72,11 @@ void Canvas::resize_canvas (int width, int height) {
     invalidate ();
 }
 
+void Canvas::set_bg_color (Vec color) {
+    bg_color = color;
+    invalidate ();
+}
+
 void Canvas::render () {
     int x1 = fmax (0, fmin (width, damage1.x));
     int y1 = fmax (0, fmin (height, damage1.y));
@@ -81,8 +86,8 @@ void Canvas::render () {
         for (int x = x1; x < x2; x++) {
             int i = x + y * width;
             double value = background[i];
-            Vec bg_color (value, value, value);
-            Vec color = deposit[i].render (bg_color);
+            Vec bg = bg_color * value;
+            Vec color = deposit[i].render (bg);
             draw_pixel (x, y, color);
         }
     }

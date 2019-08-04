@@ -17,6 +17,8 @@ class Canvas {
     private:
         double friction = 2; // frictional coefficient of canvas
 
+        Vec bg_color = Vec (1, 1, 1);
+
         int width;
         int height;
         double *background = nullptr; // the paper texture, a height map
@@ -52,6 +54,7 @@ class Canvas {
         Canvas (int width, int height);
         virtual ~Canvas ();
 
+        void set_bg_color (Vec color);
         void resize (int width, int height);
         void invalidate ();             // indicate entire screen region is damaged
         void generate_background ();    // generates the background txture

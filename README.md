@@ -16,3 +16,4 @@ in qt and sdl version:
 in the qt version:
 - change size/reinit the crayon tip with (B)ig, (M)edium, and (L)ittle
 - set the mode with (D)raw, (S)mudge, and (E)rase
+- change paper color with (R)ed, (G)reen, (W)hite, (I) black and (Q) blue

@@ -2,15 +2,17 @@
 #include <cmath>
 
 Crayon::Crayon (int width, int height, Wax *wax) : width (width), height (height), wax (wax) {
-    mask = new double[width * height];
     init_mask ();
 }
 
 Crayon::~Crayon () {
-    //delete mask;
+    delete mask;
 }
 
 void Crayon::init_mask () {
+    if (mask != nullptr)
+        delete mask;
+    mask = new double[width * height];
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             double dx = 2.0 * x / width - 1;

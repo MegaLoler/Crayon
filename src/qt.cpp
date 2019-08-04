@@ -180,6 +180,19 @@ class QT_Canvas : public QWidget {
                     break;
                 case Qt::Key_C:
                     canvas->clear_canvas ();
+                    update ();
+                    break;
+                case Qt::Key_L:
+                    crayon->width = crayon->height = 15;
+                    crayon->init_mask ();
+                    break;
+                case Qt::Key_M:
+                    crayon->width = crayon->height = 10;
+                    crayon->init_mask ();
+                    break;
+                case Qt::Key_S:
+                    crayon->width = crayon->height = 5;
+                    crayon->init_mask ();
                     break;
                 default:
                     break;
@@ -197,10 +210,10 @@ class QT_Canvas : public QWidget {
             double force = max_force * pressure;
             switch (event->type ()) {
                 case QEvent::TabletMove:
-		    if (mouse_down) {
+                    if (mouse_down) {
                         canvas->stroke (process, Vec (ppx, ppy), Vec (x, y), crayon, force, smear);
-			update ();
-		    }
+                        update ();
+                    }
                     break;
                 case QEvent::TabletPress:
                     mouse_down = true;

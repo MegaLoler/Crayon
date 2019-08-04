@@ -41,7 +41,7 @@ class QT_Canvas : public QWidget {
         double py = 0;
         double x = 0;
         double y = 0;
-        bool smear = false;
+        bool smear = false;     // smear only mode
         double max_force = 100;
 
         // the different colored waxes
@@ -56,23 +56,52 @@ class QT_Canvas : public QWidget {
         Wax *wax_grey;
         Wax *wax_white;
 
-        // the crayons with those waxes
-        Crayon *crayon_red;
-        Crayon *crayon_orange;
-        Crayon *crayon_yellow;
-        Crayon *crayon_green;
-        Crayon *crayon_blue;
-        Crayon *crayon_purple;
-        Crayon *crayon_brown;
-        Crayon *crayon_black;
-        Crayon *crayon_grey;
-        Crayon *crayon_white;
-
-        // the current crayon
+        // the crayon
         Crayon *crayon;
+
+        // for constructing the title of the window
+        string color_name;
+        string size_name;
 
         static void process () {
             QCoreApplication::processEvents();
+        }
+
+        void set_title () {
+            string mode = smear ? "smear" : "drawing";
+            setWindowTitle (QString::fromStdString ("Crayon [" + mode + " mode] [" + color_name + "] [" + size_name + "px]"));
+        }
+
+        void set_color (Wax *wax) {
+            crayon->wax = wax;
+            if (wax == wax_red)
+                color_name = "red";
+            else if (wax == wax_orange)
+                color_name = "orange";
+            else if (wax == wax_yellow)
+                color_name = "yellow";
+            else if (wax == wax_green)
+                color_name = "green";
+            else if (wax == wax_blue)
+                color_name = "blue";
+            else if (wax == wax_purple)
+                color_name = "purple";
+            else if (wax == wax_brown)
+                color_name = "brown";
+            else if (wax == wax_black)
+                color_name = "black";
+            else if (wax == wax_grey)
+                color_name = "grey";
+            else if (wax == wax_white)
+                color_name = "white";
+            set_title ();
+        }
+
+        void set_size (double diameter) {
+            crayon->width = crayon->height = diameter;
+            crayon->init_mask ();
+            size_name = to_string ((int) diameter);
+            set_title ();
         }
 
     public:
@@ -81,9 +110,8 @@ class QT_Canvas : public QWidget {
         QT_Canvas (int width, int height, QWidget *parent = 0) : QWidget (parent) {
             canvas = new QImage_Canvas (width, height);
             resize (width, height);
-            setWindowTitle ("Crayon");
             setMouseTracking (true);
-	    setAttribute (Qt::WA_TabletTracking);
+            setAttribute (Qt::WA_TabletTracking);
 
             // create the different colored waxes
             wax_red    = new Wax (0.95,  0.45, 0.45,  0.605,  0.051);
@@ -97,21 +125,12 @@ class QT_Canvas : public QWidget {
             wax_grey   = new Wax (0.42,  0.4,  0.39,  0.44,   0.51);
             wax_white  = new Wax (0.8,   0.8,  0.79,  0.55,   0.33);
 
-            // create the crayons with those waxes
-            double diameter = 10;
-            crayon_red    = new Crayon (diameter, diameter, wax_red);
-            crayon_orange = new Crayon (diameter, diameter, wax_orange);
-            crayon_yellow = new Crayon (diameter, diameter, wax_yellow);
-            crayon_green  = new Crayon (diameter, diameter, wax_green);
-            crayon_blue   = new Crayon (diameter, diameter, wax_blue);
-            crayon_purple = new Crayon (diameter, diameter, wax_purple);
-            crayon_brown  = new Crayon (diameter, diameter, wax_brown);
-            crayon_black  = new Crayon (diameter, diameter, wax_black);
-            crayon_grey   = new Crayon (diameter, diameter, wax_grey);
-            crayon_white  = new Crayon (diameter, diameter, wax_white);
+            // create the crayon
+            crayon = new Crayon (10, 10, wax_red);
 
-            // set the current crayon
-            crayon = crayon_red;
+            // init color n size
+            set_color (wax_red);
+            set_size (10);
         }
 
         ~QT_Canvas () {
@@ -126,16 +145,7 @@ class QT_Canvas : public QWidget {
             delete wax_black;
             delete wax_grey;
             delete wax_white;
-            delete crayon_red;
-            delete crayon_orange;
-            delete crayon_yellow;
-            delete crayon_green;
-            delete crayon_blue;
-            delete crayon_purple;
-            delete crayon_brown;
-            delete crayon_black;
-            delete crayon_grey;
-            delete crayon_white;
+            delete crayon;
         }
 
     protected:
@@ -149,50 +159,51 @@ class QT_Canvas : public QWidget {
         void keyPressEvent (QKeyEvent *event) {
             switch (event->key ()) {
                 case Qt::Key_1:
-                    crayon = crayon_red;
+                    set_color (wax_red);
                     break;
                 case Qt::Key_2:
-                    crayon = crayon_orange;
+                    set_color (wax_orange);
                     break;
                 case Qt::Key_3:
-                    crayon = crayon_yellow;
+                    set_color (wax_yellow);
                     break;
                 case Qt::Key_4:
-                    crayon = crayon_green;
+                    set_color (wax_green);
                     break;
                 case Qt::Key_5:
-                    crayon = crayon_blue;
+                    set_color (wax_blue);
                     break;
                 case Qt::Key_6:
-                    crayon = crayon_purple;
+                    set_color (wax_purple);
                     break;
                 case Qt::Key_7:
-                    crayon = crayon_brown;
+                    set_color (wax_brown);
                     break;
                 case Qt::Key_8:
-                    crayon = crayon_black;
+                    set_color (wax_black);
                     break;
                 case Qt::Key_9:
-                    crayon = crayon_grey;
+                    set_color (wax_grey);
                     break;
                 case Qt::Key_0:
-                    crayon = crayon_white;
+                    set_color (wax_white);
                     break;
                 case Qt::Key_C:
                     canvas->clear_canvas ();
                     update ();
                     break;
-                case Qt::Key_L:
-                    crayon->width = crayon->height = 15;
-                    crayon->init_mask ();
+                case Qt::Key_B:
+                    set_size (15);
                     break;
                 case Qt::Key_M:
-                    crayon->width = crayon->height = 10;
-                    crayon->init_mask ();
+                    set_size (10);
+                    break;
+                case Qt::Key_L:
+                    set_size (5);
                     break;
                 case Qt::Key_S:
-                    crayon->width = crayon->height = 5;
-                    crayon->init_mask ();
+                    smear = !smear;
+                    set_title ();
                     break;
                 default:
                     break;

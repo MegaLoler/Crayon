@@ -32,6 +32,20 @@ void Canvas::free_resources () {
         delete deposit;
     if (deposit_ != nullptr)
         delete deposit_;
+    if (undo_deposit != nullptr)
+        delete undo_deposit;
+}
+
+void Canvas::save_state () {
+    for (int i = 0; i < width * height; i++)
+        undo_deposit[i] = deposit[i];
+}
+
+void Canvas::undo () {
+    Stack *temp = deposit;
+    deposit = undo_deposit;
+    undo_deposit = temp;
+    invalidate ();
 }
 
 void Canvas::resize_canvas (int width, int height) {
@@ -39,6 +53,7 @@ void Canvas::resize_canvas (int width, int height) {
     double *new_background = new double[size];
     Stack *new_deposit = new Stack[size];
     Stack *new_deposit_ = new Stack[size];
+    Stack *new_undo_deposit = new Stack[size];
 
     clear_canvas (new_deposit, width, height);
     if (deposit != nullptr) {
@@ -69,6 +84,7 @@ void Canvas::resize_canvas (int width, int height) {
     background = new_background;
     deposit = new_deposit;
     deposit_ = new_deposit_;
+    undo_deposit = new_undo_deposit;
     invalidate ();
 }
 

@@ -21,9 +21,10 @@ class Canvas {
 
         int width;
         int height;
-        double *background = nullptr; // the paper texture, a height map
-        Stack *deposit = nullptr;     // how much wax is deposited on the canvas at different spots
-        Stack *deposit_ = nullptr;    // back buffer
+        double *background = nullptr;   // the paper texture, a height map
+        Stack *deposit = nullptr;       // how much wax is deposited on the canvas at different spots
+        Stack *deposit_ = nullptr;      // back buffer
+        Stack *undo_deposit = nullptr;  // undo state
 
         // rectangle of area to redraw each frame
         Vec damage1;
@@ -61,4 +62,7 @@ class Canvas {
         void clear_canvas (Stack *deposit = nullptr, int width = 0, int height = 0);           // clears the wax deposit
         void render ();
         void stroke (void (*process) (void), Vec p1, Vec p2, Crayon *crayon, double force, Mode = DRAW); // draw a line with a crayon
+
+        void save_state (); // save current state for undo
+        void undo ();       // revert to saved state
 };

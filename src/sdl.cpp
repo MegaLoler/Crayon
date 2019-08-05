@@ -101,6 +101,7 @@ int main (int argc, char **argv) {
             case SDL_FINGERDOWN:
                 px = event.tfinger.x * default_width;
                 py = event.tfinger.y * default_height;
+                canvas->save_state ();
                 break;
             case SDL_FINGERMOTION:
                 x = event.tfinger.x * default_width;
@@ -108,6 +109,9 @@ int main (int argc, char **argv) {
                 canvas->stroke (process, Vec (px, py), Vec (x, y), crayon, event.tfinger.pressure, mode);
                 px = x;
                 py = y;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                canvas->save_state ();
                 break;
             case SDL_MOUSEMOTION:
                 x = event.motion.x;
@@ -166,6 +170,9 @@ int main (int argc, char **argv) {
                         break;
                     case SDLK_e:
                         mode = ERASE;
+                        break;
+                    case SDLK_u:
+                        canvas->undo ();
                         break;
                 }
                 break;

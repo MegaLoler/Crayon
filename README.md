@@ -15,6 +15,7 @@ in qt and sdl version:
 - C clears canvas
 - number keys 1 thru 0 change colors
 - set the mode with (D)raw, (S)mudge, and (E)rase
+- U to undo/redo one stroke
 
 in the qt version:
 - change size/reset the crayon tip with (B)ig, (M)edium, and (L)ittle

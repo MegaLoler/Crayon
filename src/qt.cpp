@@ -254,6 +254,10 @@ class QT_Canvas : public QWidget {
                     canvas->set_bg_color (Vec (0.3, 0.5, 0.9));
                     update ();
                     break;
+                case Qt::Key_U:
+                    canvas->undo ();
+                    update ();
+                    break;
                 default:
                     break;
             }
@@ -276,6 +280,7 @@ class QT_Canvas : public QWidget {
                     break;
                 case QEvent::TabletPress:
                     mouse_down = true;
+                    canvas->save_state ();
                     break;
                 case QEvent::TabletRelease:
                     mouse_down = false;
@@ -300,6 +305,7 @@ class QT_Canvas : public QWidget {
 
         void mousePressEvent (QMouseEvent *event) {
             mouse_down = true;
+            canvas->save_state ();
         }
 
         void mouseReleaseEvent (QMouseEvent *event) {

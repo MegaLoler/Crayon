@@ -60,3 +60,8 @@ test: $(TARGET_SDL)
 .PHONY:
 debug: $(TARGET_SDL)
 	$(DEBUGGER) $(TARGET_SDL)
+
+.PHONY:
+install: $(TARGET_QT) $(TARGET_SDL)
+	cp $(TARGET_QT) $(INSTALL_PATH)
+	cp $(TARGET_SDL) $(INSTALL_PATH)

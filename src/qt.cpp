@@ -1,4 +1,6 @@
 #include <iostream>
+#include <ctime>
+#include <cstdlib>
 #include <canvas.h>
 #include <crayon.h>
 #include <wax.h>
@@ -322,6 +324,8 @@ class QT_Canvas : public QWidget {
 };
 
 int main (int argc, char **argv) {
+
+    srand (time (0));
 
     QApplication app (argc, argv);
     QT_Canvas window (default_width, default_height);

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <ctime>
+#include <cstdlib>
 #include <canvas.h>
 #include <crayon.h>
 #include <wax.h>
@@ -28,6 +30,8 @@ class SDL_Canvas : public Canvas {
 void process () {}
 
 int main (int argc, char **argv) {
+
+    srand (time (0));
 
     Wax *wax_red    = new Wax (0.95,  0.45, 0.45,  0.605,  0.051);
     Wax *wax_orange = new Wax (0.999, 0.55, 0.2,   0.605,  0.042);

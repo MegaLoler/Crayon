@@ -54,6 +54,10 @@ void Canvas::resize_canvas (int width, int height) {
     Stack *new_deposit = new Stack[size];
     Stack *new_deposit_ = new Stack[size];
     Stack *new_undo_deposit = new Stack[size];
+    
+    for (int i = 0; i < size; i++) {
+        new_background[i] = 0;
+    }
 
     clear_canvas (new_deposit, width, height);
     if (deposit != nullptr) {

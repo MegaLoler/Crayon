@@ -2,6 +2,12 @@
 
 crayon simulation based on [this paper](https://www.researchgate.net/publication/4038539_Simulating_wax_crayons)
 
+
+
+https://github.com/user-attachments/assets/2b1b0f58-f580-4179-a790-a4ff089ef90f
+
+
+
 ![showcase image](crayon.png)
 
 
